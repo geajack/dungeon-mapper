@@ -228,14 +228,14 @@ function render(event)
 
                 if (!tileMap.matrix[yOffset + 1][xOffset])
                 {
-                    context.moveTo(px, py + pixelsPerMeter);
-                    context.lineTo(px + pixelsPerMeter, py + pixelsPerMeter);
+                    context.moveTo(px - 2, py + pixelsPerMeter);
+                    context.lineTo(px + pixelsPerMeter + 2, py + pixelsPerMeter);
                 }
 
                 if (!tileMap.matrix[yOffset - 1][xOffset])
                 {
-                    context.moveTo(px, py);
-                    context.lineTo(px + pixelsPerMeter, py);
+                    context.moveTo(px - 2, py);
+                    context.lineTo(px + pixelsPerMeter + 2, py);
                 }
             }
         }
