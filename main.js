@@ -61,7 +61,7 @@ class TileMap
         let width = this.matrix[0].length;
         let height = this.matrix.length;
 
-        while (x < x0)
+        while (x <= x0)
         {
             x0 -= 100;
             width += 100;
@@ -71,7 +71,7 @@ class TileMap
             }
         }
 
-        while (x >= x0 + width)
+        while (x >= x0 + width - 1)
         {
             width += 100;
             for (let row of this.matrix)
@@ -80,14 +80,14 @@ class TileMap
             }
         }
 
-        while (y < y0)
+        while (y <= y0)
         {
             y0 -= 100;
             height += 100;
             this.matrix.unshift(...new Array(100));
         }
 
-        while (y >= y0 + height)
+        while (y >= y0 + height  - 1)
         {
             height += 100;
             this.matrix.push(...new Array(100));
@@ -124,7 +124,7 @@ let tileMap = new TileMap();
 const Tools = {
     MOVE: Symbol(), DRAW: Symbol()
 };
-let tool = Tools.MOVE;
+let tool = Tools.DRAW;
 
 function render(event)
 {
@@ -197,13 +197,61 @@ function render(event)
 
     context.strokeStyle = "#000000";
     context.lineWidth = 4;
-    for (let [x, y] of tileMap.getDrawnTiles())
+
+    context.beginPath();
+
+    for (let yOffset = 0; yOffset < tileMap.matrix.length; yOffset++)
     {
-        let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
-        px *= pixelsPerMeter;
-        py *= pixelsPerMeter;
-        context.strokeRect(px, py, pixelsPerMeter, pixelsPerMeter);
+        let row = tileMap.matrix[yOffset];
+        for (let xOffset = 0; xOffset < row.length; xOffset++)
+        {
+            if (row[xOffset])
+            {
+                let x = xOffset + tileMap.x0;
+                let y = yOffset + tileMap.y0;
+                
+                let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
+                px *= pixelsPerMeter;
+                py *= pixelsPerMeter;
+
+                if (!row[xOffset + 1])
+                {
+                    context.moveTo(px + pixelsPerMeter, py);
+                    context.lineTo(px + pixelsPerMeter, py + pixelsPerMeter);
+                }
+
+                if (!row[xOffset - 1])
+                {
+                    context.moveTo(px, py);
+                    context.lineTo(px, py + pixelsPerMeter);
+                }
+
+                if (!tileMap.matrix[yOffset + 1][xOffset])
+                {
+                    context.moveTo(px, py + pixelsPerMeter);
+                    context.lineTo(px + pixelsPerMeter, py + pixelsPerMeter);
+                }
+
+                if (!tileMap.matrix[yOffset - 1][xOffset])
+                {
+                    context.moveTo(px, py);
+                    context.lineTo(px + pixelsPerMeter, py);
+                }
+            }
+        }
     }
+
+    context.stroke();
+
+    // for (let [x, y] of tileMap.getDrawnTiles())
+    // {
+    //     if ()
+
+    //     let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
+    //     px *= pixelsPerMeter;
+    //     py *= pixelsPerMeter;
+    //     context.strokeRect(px, py, pixelsPerMeter, pixelsPerMeter);
+    // }
 }
 
 class ToolbarController
