@@ -1,0 +1,44 @@
+html, body
+{
+    padding: 0px;
+    margin: 0px;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+canvas
+{
+    width: 100%;
+    height: 100%;
+    /* solarized light */
+    background-color: #F0ECE0;
+}
+
+#tools
+{
+    /* centered at bottom */
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 3px solid black;
+    box-sizing: border-box;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, 0.75);
+    background-color: #F0ECE0;
+}
+
+#tools button
+{
+    height: 45px;
+    width: 45px;
+    border: 1px solid black;
+    border-radius: 5px;
+}
