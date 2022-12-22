@@ -45,17 +45,73 @@ class TileMap
 {
     constructor()
     {
-        this.drawnTiles = new Set();
+        this.matrix = [];
+        while (this.matrix.length < 200)
+        {
+            this.matrix.push(new Array(200));
+        }
+        this.x0 = 0;
+        this.y0 = 0;
     }
 
     draw(x, y)
     {
-        this.drawnTiles.add([x, y]);
+        let x0 = this.x0;
+        let y0 = this.y0;
+        let width = this.matrix[0].length;
+        let height = this.matrix.length;
+
+        while (x < x0)
+        {
+            x0 -= 100;
+            width += 100;
+            for (let row of this.matrix)
+            {
+                row.unshift(...new Array(100));
+            }
+        }
+
+        while (x >= x0 + width)
+        {
+            width += 100;
+            for (let row of this.matrix)
+            {
+                row.concat(...new Array(100));
+            }
+        }
+
+        while (y < y0)
+        {
+            y0 -= 100;
+            height += 100;
+            this.matrix.unshift(...new Array(100));
+        }
+
+        while (y >= y0 + height)
+        {
+            height += 100;
+            this.matrix.push(...new Array(100));
+        }
+
+        this.matrix[y - y0][x - x0] = true;
+        this.x0 = x0;
+        this.y0 = y0;
     }
 
     getDrawnTiles()
     {
-        return this.drawnTiles;
+        let tiles = [];
+        for (let y = 0; y < this.matrix.length; y++)
+        {
+            for (let x = 0; x < this.matrix[y].length; x++)
+            {
+                if (this.matrix[y][x])
+                {
+                    tiles.push([x + this.x0, y + this.y0]);
+                }
+            }
+        }
+        return tiles;
     }
 }
 
