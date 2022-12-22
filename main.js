@@ -1,3 +1,5 @@
+import { bind } from "./viewbind.js";
+
 class Drag
 {
     constructor()
@@ -66,7 +68,7 @@ let tileMap = new TileMap();
 const Tools = {
     MOVE: Symbol(), DRAW: Symbol()
 };
-let tool = Tools.DRAW;
+let tool = Tools.MOVE;
 
 function render(event)
 {
@@ -116,6 +118,7 @@ function render(event)
     context.clearRect(0, 0, canvas.width, canvas.height);
     
     context.strokeStyle = "#bfbbb1";
+    context.lineWidth = 2;
     context.beginPath();
 
     let gridX = dx * pixelsPerMeter;
@@ -136,14 +139,32 @@ function render(event)
 
     context.stroke();
 
+    context.strokeStyle = "#000000";
+    context.lineWidth = 4;
     for (let [x, y] of tileMap.getDrawnTiles())
     {
         let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
         px *= pixelsPerMeter;
         py *= pixelsPerMeter;
-        context.rect(px, py, pixelsPerMeter, pixelsPerMeter);
+        context.strokeRect(px, py, pixelsPerMeter, pixelsPerMeter);
     }
-    context.fill();
+}
+
+class ToolbarController
+{
+    initialize()
+    {
+        this.move.addEventListener("click", () => this.onClick(this.move, "MOVE"));
+        this.draw.addEventListener("click", () => this.onClick(this.draw, "DRAW"));
+    }
+
+    onClick(button, toolName)
+    {
+        tool = Tools[toolName];
+        this.move.classList.remove("selected");
+        this.draw.classList.remove("selected");
+        button.classList.add("selected");
+    }
 }
 
 function onMouseDown(event)
@@ -192,16 +213,6 @@ function onWheel(event)
     );
 }
 
-function onClickMoveTool()
-{
-    tool = Tools.MOVE;
-}
-
-function onClickDrawTool()
-{
-    tool = Tools.DRAW;
-}
-
 let canvas = document.querySelector("canvas");
 let context = canvas.getContext("2d");
 
@@ -212,5 +223,7 @@ canvas.addEventListener("mousedown", onMouseDown);
 canvas.addEventListener("mouseup", onMouseUp);
 canvas.addEventListener("mousemove", onMouseMove);
 canvas.addEventListener("wheel", onWheel);
+
+let root = bind(document.getElementById("tools"), ToolbarController, [], []);
 
 render();

@@ -42,3 +42,9 @@ canvas
     border: 1px solid black;
     border-radius: 5px;
 }
+
+#tools button.selected
+{
+    background-color: #222;
+    color: white;
+}

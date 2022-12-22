@@ -1,81 +1,152 @@
-export function instantiate(element, controllerClass, ...childClasses)
+export function bind(node, controllerClass, otherControllerClasses, components)
 {
-    let controllerClasses = {};
-    let controller;
+    let controller = new controllerClass();
 
-    if (controllerClass !== undefined)
+    let dictOfClasses = {};
+    for (let controllerClass of otherControllerClasses)
     {
-        for (let classEntity of [controllerClass, ...childClasses])
-        {
-            controllerClasses[classEntity.name] = classEntity;
-        }
-
-        controller = new controllerClass();
-    }
-    else
-    {
-        controller = {};
+        dictOfClasses[controllerClass.name] = controllerClass;
     }
 
-    bind(
-        element,
-        controller,
-        controllerClasses
-    );
+    let dictOfComponents = {};
+    for (let component of components)
+    {
+        dictOfComponents[component.name.toUpperCase()] = component;
+    }
 
+    return bindChild(node, null, controller, dictOfClasses, dictOfComponents);
+}
+
+export function create(component, controllerClasses, otherComponents)
+{
+    let clonedFragment = component.fragment.cloneNode(true); // fail if no fragment
+    let controller = bind(clonedFragment, component.controllerClass, controllerClasses, otherComponents);
     return controller;
 }
 
-function bind(root, rootController, controllerClasses)
+export function component(name, htmlFragment, controllerClass)
 {
-    let walker = document.createTreeWalker(
-        root,
-        NodeFilter.SHOW_ELEMENT,
-        function(node)
+    return {
+        name: name,
+        fragment: htmlFragment,
+        controllerClass: controllerClass
+    }
+}
+
+function bindChild(childNode, parentController, childController, controllerClasses, components)
+{
+    let nodeOrFragment = childNode;
+    let tagName = childNode.tagName;
+    let isFragment = false;
+
+    if (components[tagName] !== undefined)
+    {
+        let component = components[tagName];
+        if (component.fragment)
         {
-            if (node === root)
+            nodeOrFragment = component.fragment.cloneNode(true); // todo fail if not empty tag
+            isFragment = true;
+        }
+    }
+
+    if (!childController)
+    {
+        let controllerClass = null;
+        let controllerClassName = childNode.getAttribute("controller");
+        if (controllerClassName)
+        {
+            controllerClass = controllerClasses[controllerClassName]; // still works if we explicitly specify a class that's undefined, should be an error
+        }
+
+        if (!controllerClass)
+        {
+            if (components[tagName] !== undefined)
             {
-                return NodeFilter.FILTER_ACCEPT;
+                let component = components[tagName];
+                if (component.controllerClass)
+                {
+                    controllerClass = component.controllerClass;
+                }
+            }
+        }
+        
+        if (controllerClass)
+        {
+            childController = new controllerClass();
+        }
+    }
+
+    let returnValue;
+    let controller;
+    if (childController)
+    {
+        returnValue = childController;
+        controller = childController;
+        
+        childController.html = nodeOrFragment;
+    }
+    else
+    {
+        returnValue = nodeOrFragment;
+        controller = parentController;
+    }
+
+    for (let node of nodeOrFragment.childNodes)
+    {
+        if (node.nodeType === Node.TEXT_NODE)
+        {
+            continue;
+        }
+
+        if (node.nodeType === Node.COMMENT_NODE)
+        {
+            continue;
+        }
+
+        let value = bindChild(node, controller, null, controllerClasses, components);
+        let bindName = node.getAttribute("bind");
+        if (bindName)
+        {
+            if (bindName.endsWith("[]"))
+            {
+                let arrayName = bindName.slice(0, -2);
+                if (controller[arrayName] === undefined)
+                {
+                    controller[arrayName] = new Array();
+                }
+                controller[arrayName].push(value);
             }
             else
             {
-                let filterResult = NodeFilter.FILTER_ACCEPT;
-                let bindingName = node.getAttribute("bind");
-                if (bindingName !== null)
-                {
-                    let controllerClassName = node.getAttribute("controller");
-                    if (controllerClassName !== null)
-                    {
-                        let controller = new controllerClasses[controllerClassName]();
-                        rootController[bindingName] = controller;
-                        bind(
-                            node,
-                            controller,
-                            controllerClasses
-                        );
-                        filterResult = NodeFilter.FILTER_REJECT;
-                    }
-                    else
-                    {
-                        rootController[bindingName] = node;
-                    }
-                }
-
-                let clickHandlerName = node.getAttribute("click");
-                let handler = rootController[clickHandlerName];
-                if (handler)
-                {
-                    node.addEventListener("click", handler.bind(rootController));
-                }
-
-                return filterResult;
+                controller[bindName] = value;
             }
         }
-    );
-    while (walker.nextNode()) {}
-
-    if (rootController.initialize)
-    {
-        rootController.initialize(root);
     }
+
+    
+    if (childController)
+    {
+        if (childController.initialize)
+        {
+            let parameters = {};
+            for (let attribute of childNode.attributes)
+            {
+                if (attribute.name.startsWith("vb-"))
+                {
+                    let parameterName = attribute.name.slice(3);
+                    parameters[parameterName] = attribute.value;
+                }
+            }
+
+            childController.initialize(nodeOrFragment, parameters);
+        }
+    }
+
+    if (isFragment)
+    {
+        childNode.parentNode.insertBefore(nodeOrFragment, childNode); // we assume childNode has a parent
+        childNode.parentNode.removeChild(childNode);
+    }
+
+    return returnValue;
 }

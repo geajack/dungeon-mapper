@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Project</title>
     <link rel="stylesheet" href="style.css" />
-    <script src="main.js" defer></script>
+    <script src="main.js" defer type="module"></script>
 </head>
 <body>
     <canvas></canvas>
     <div id="tools">
-        <button onclick="onClickMoveTool()"></button>
-        <button onclick="onClickDrawTool()"></button>
-        <button></button>
-        <button></button>
+        <button bind="move" vb-tool="MOVE" class="selected">M</button>
+        <button bind="draw" vb-tool="DRAW">D</button>
+        <button>E</button>
+        <button>S</button>
     </div>
 </body>
 </html>
