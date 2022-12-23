@@ -90,7 +90,7 @@ class TileMap
             width += bufferSize;
             for (let row of this.matrix)
             {
-                row.concat(...new Array(bufferSize));
+                row.push(...new Array(bufferSize));
             }
             sizeChanged = true;
         }
@@ -233,7 +233,8 @@ export class App
             else if (event.type === "zoom")
             {
                 let zoom = Math.pow(1.1, -event.delta / 100);
-                pixelsPerMeter *= zoom;
+                this.pixelsPerMeter *= zoom;
+                pixelsPerMeter = this.pixelsPerMeter;
             }
 
             if (drag.dragging && tool === Tools.MOVE)
