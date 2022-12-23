@@ -1,5 +1,5 @@
 import { bind } from "./viewbind.js";
-import { render, setTool, initialize } from "./app.js";
+import { App } from "./app.js";
 
 class ToolbarController
 {
@@ -11,7 +11,7 @@ class ToolbarController
 
     onClick(button, toolName)
     {
-        setTool(toolName);
+        app.setTool(toolName);
         this.move.classList.remove("selected");
         this.draw.classList.remove("selected");
         button.classList.add("selected");
@@ -21,7 +21,7 @@ class ToolbarController
 function onMouseDown(event)
 {
     let [x, y] = [event.offsetX, event.offsetY];
-    render(
+    app.render(
         {
             type: "mousedown",
             x: x,
@@ -33,7 +33,7 @@ function onMouseDown(event)
 function onMouseUp(event)
 {
     let [x, y] = [event.offsetX, event.offsetY];
-    render(
+    app.render(
         {
             type: "mouseup",
             x: x,
@@ -45,7 +45,7 @@ function onMouseUp(event)
 function onMouseMove(event)
 {
     let [x, y] = [event.offsetX, event.offsetY];
-    render(
+    app.render(
         {
             type: "mousemove",
             x: x,
@@ -56,7 +56,7 @@ function onMouseMove(event)
 
 function onWheel(event)
 {
-    render(
+    app.render(
         {
             type: "zoom",
             delta: event.deltaY
@@ -64,19 +64,16 @@ function onWheel(event)
     );
 }
 
-let canvas = document.querySelector("canvas");
-
-canvas.width = canvas.clientWidth;
-canvas.height = canvas.clientHeight;
-
-let root = bind(document.getElementById("tools"), ToolbarController, [], []);
-
-(async function()
+async function initialize()
 {
-    await initialize();
+    await app.initialize();
     canvas.addEventListener("mousedown", onMouseDown);
     canvas.addEventListener("mouseup", onMouseUp);
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("wheel", onWheel);
-    render();
-})();
+    app.render();
+}
+
+let canvas = document.querySelector("canvas");
+let toolbar = bind(document.getElementById("tools"), ToolbarController, [], []);
+let app = new App(canvas);

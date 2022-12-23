@@ -137,169 +137,177 @@ class TileMap
     }
 }
 
-export function setTool(toolName)
+export class App
 {
-    tool = Tools[toolName];
-}
-
-export function render(event)
-{
-    if (event)
+    constructor(canvas)
     {
-        if (event.type === "mousedown")
+        this.canvas = document.querySelector("canvas");
+        this.context = canvas.getContext("2d");
+        this.canvas.width = canvas.clientWidth;
+        this.canvas.height = canvas.clientHeight;
+
+        this.worldCoordinates = { x: 0, y: 0 };
+        this.pixelsPerMeter = 30;
+        this.drag = new Drag();
+        this.tool = Tools.DRAW;
+    }
+
+    async initialize()
+    {
+        let imageURL = "./hatching.png";
+        let image = new Image();
+        image.src = imageURL;
+        await new Promise((resolve, reject) => {
+            image.onload = resolve;
+        });
+        let bitmap = await createImageBitmap(image);
+        this.tileMap = new TileMap(bitmap);
+    }
+
+    setTool(toolName)
+    {
+        tool = Tools[toolName];
+    }
+
+    render(event)
+    {
+        let {
+            context,
+            canvas,
+            worldCoordinates,
+            pixelsPerMeter,
+            drag,
+            tool,
+            tileMap
+        } = this;
+
+        if (event)
         {
-            drag.start(event.x, event.y);
-            drag.onMouseMove(event.x, event.y);
-        }
-        else if (event.type === "mousemove")
-        {
-            if (drag.dragging)
+            if (event.type === "mousedown")
             {
+                drag.start(event.x, event.y);
                 drag.onMouseMove(event.x, event.y);
             }
-        }
-        else if (event.type === "mouseup")
-        {
-            drag.stop();
-        }
-        else if (event.type === "zoom")
-        {
-            let zoom = Math.pow(1.1, -event.delta / 100);
-            pixelsPerMeter *= zoom;
-        }
-
-        if (drag.dragging && tool === Tools.MOVE)
-        {
-            worldCoordinates.x -= drag.getDx() / pixelsPerMeter;
-            worldCoordinates.y -= drag.getDy() / pixelsPerMeter;
-        }
-
-        if (drag.dragging && tool === Tools.DRAW)
-        {
-            let x = worldCoordinates.x + drag.x1 / pixelsPerMeter;
-            let y = worldCoordinates.y + drag.y1 / pixelsPerMeter;
-            x = Math.floor(x);
-            y = Math.floor(y);
-            tileMap.draw(x, y);
-        }
-    }
-
-    let dx = Math.ceil(worldCoordinates.x) - worldCoordinates.x;
-    let dy = Math.ceil(worldCoordinates.y) - worldCoordinates.y;
-    
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    
-    context.strokeStyle = "#bfbbb1";
-    context.lineWidth = 2;
-    context.beginPath();
-
-    let gridX = dx * pixelsPerMeter;
-    while (gridX < canvas.width)
-    {
-        context.moveTo(gridX, 0);
-        context.lineTo(gridX, canvas.height);
-        gridX += pixelsPerMeter;
-    }
-
-    let gridY = dy * pixelsPerMeter;
-    while (gridY < canvas.height)
-    {
-        context.moveTo(0, gridY);
-        context.lineTo(canvas.width, gridY);
-        gridY += pixelsPerMeter;
-    }
-
-    context.stroke();
-
-    context.drawImage(
-        tileMap.canvas,
-        pixelsPerMeter * (tileMap.x0 - worldCoordinates.x), pixelsPerMeter * (tileMap.y0 - worldCoordinates.y),
-        pixelsPerMeter * tileMap.getWidth(), pixelsPerMeter * tileMap.getHeight()
-    );
-
-    context.strokeStyle = "#000000";
-    context.fillStyle = "#F0ECE0";
-    context.lineWidth = 4;
-
-    context.beginPath();
-
-    for (let yOffset = 0; yOffset < tileMap.matrix.length; yOffset++)
-    {
-        let row = tileMap.matrix[yOffset];
-        for (let xOffset = 0; xOffset < row.length; xOffset++)
-        {
-            if (row[xOffset])
-            {                
-                let x = xOffset + tileMap.x0;
-                let y = yOffset + tileMap.y0;
-                
-                let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
-                px *= pixelsPerMeter;
-                py *= pixelsPerMeter;
-
-                context.fillRect(px, py, pixelsPerMeter, pixelsPerMeter);
-
-                if (!row[xOffset + 1])
+            else if (event.type === "mousemove")
+            {
+                if (drag.dragging)
                 {
-                    context.moveTo(px + pixelsPerMeter, py);
-                    context.lineTo(px + pixelsPerMeter, py + pixelsPerMeter);
+                    drag.onMouseMove(event.x, event.y);
                 }
+            }
+            else if (event.type === "mouseup")
+            {
+                drag.stop();
+            }
+            else if (event.type === "zoom")
+            {
+                let zoom = Math.pow(1.1, -event.delta / 100);
+                pixelsPerMeter *= zoom;
+            }
 
-                if (!row[xOffset - 1])
-                {
-                    context.moveTo(px, py);
-                    context.lineTo(px, py + pixelsPerMeter);
-                }
+            if (drag.dragging && tool === Tools.MOVE)
+            {
+                worldCoordinates.x -= drag.getDx() / pixelsPerMeter;
+                worldCoordinates.y -= drag.getDy() / pixelsPerMeter;
+            }
 
-                if (!tileMap.matrix[yOffset + 1][xOffset])
-                {
-                    context.moveTo(px - 2, py + pixelsPerMeter);
-                    context.lineTo(px + pixelsPerMeter + 2, py + pixelsPerMeter);
-                }
-
-                if (!tileMap.matrix[yOffset - 1][xOffset])
-                {
-                    context.moveTo(px - 2, py);
-                    context.lineTo(px + pixelsPerMeter + 2, py);
-                }
-                
+            if (drag.dragging && tool === Tools.DRAW)
+            {
+                let x = worldCoordinates.x + drag.x1 / pixelsPerMeter;
+                let y = worldCoordinates.y + drag.y1 / pixelsPerMeter;
+                x = Math.floor(x);
+                y = Math.floor(y);
+                tileMap.draw(x, y);
             }
         }
+
+        let dx = Math.ceil(worldCoordinates.x) - worldCoordinates.x;
+        let dy = Math.ceil(worldCoordinates.y) - worldCoordinates.y;
+        
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        
+        context.strokeStyle = "#bfbbb1";
+        context.lineWidth = 2;
+        context.beginPath();
+
+        let gridX = dx * pixelsPerMeter;
+        while (gridX < canvas.width)
+        {
+            context.moveTo(gridX, 0);
+            context.lineTo(gridX, canvas.height);
+            gridX += pixelsPerMeter;
+        }
+
+        let gridY = dy * pixelsPerMeter;
+        while (gridY < canvas.height)
+        {
+            context.moveTo(0, gridY);
+            context.lineTo(canvas.width, gridY);
+            gridY += pixelsPerMeter;
+        }
+
+        context.stroke();
+
+        context.drawImage(
+            tileMap.canvas,
+            pixelsPerMeter * (tileMap.x0 - worldCoordinates.x), pixelsPerMeter * (tileMap.y0 - worldCoordinates.y),
+            pixelsPerMeter * tileMap.getWidth(), pixelsPerMeter * tileMap.getHeight()
+        );
+
+        context.strokeStyle = "#000000";
+        context.fillStyle = "#F0ECE0";
+        context.lineWidth = 4;
+
+        context.beginPath();
+
+        for (let yOffset = 0; yOffset < tileMap.matrix.length; yOffset++)
+        {
+            let row = tileMap.matrix[yOffset];
+            for (let xOffset = 0; xOffset < row.length; xOffset++)
+            {
+                if (row[xOffset])
+                {                
+                    let x = xOffset + tileMap.x0;
+                    let y = yOffset + tileMap.y0;
+                    
+                    let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
+                    px *= pixelsPerMeter;
+                    py *= pixelsPerMeter;
+
+                    context.fillRect(px, py, pixelsPerMeter, pixelsPerMeter);
+
+                    if (!row[xOffset + 1])
+                    {
+                        context.moveTo(px + pixelsPerMeter, py);
+                        context.lineTo(px + pixelsPerMeter, py + pixelsPerMeter);
+                    }
+
+                    if (!row[xOffset - 1])
+                    {
+                        context.moveTo(px, py);
+                        context.lineTo(px, py + pixelsPerMeter);
+                    }
+
+                    if (!tileMap.matrix[yOffset + 1][xOffset])
+                    {
+                        context.moveTo(px - 2, py + pixelsPerMeter);
+                        context.lineTo(px + pixelsPerMeter + 2, py + pixelsPerMeter);
+                    }
+
+                    if (!tileMap.matrix[yOffset - 1][xOffset])
+                    {
+                        context.moveTo(px - 2, py);
+                        context.lineTo(px + pixelsPerMeter + 2, py);
+                    }
+                    
+                }
+            }
+        }
+        
+        context.stroke();
     }
-    
-    context.stroke();
 }
 
-export async function initialize()
-{
-    let bitmap;
-    let imageURL = "./hatching.png";
-    let image = new Image();
-    image.src = imageURL;
-    await new Promise((resolve, reject) => {
-        image.onload = resolve;
-    });
-    bitmap = await createImageBitmap(image);
-    tileMap = new TileMap(bitmap);
-}
-
-export const Tools = {
+const Tools = {
     MOVE: Symbol(), DRAW: Symbol()
 };
-
-let canvas;
-let worldCoordinates;
-let pixelsPerMeter;
-let drag;
-let tileMap;
-let context;
-let tool;
-
-canvas = document.querySelector("canvas");
-context = canvas.getContext("2d");
-
-worldCoordinates = { x: 0, y: 0 };
-pixelsPerMeter = 30;
-drag = new Drag();
-
-tool = Tools.DRAW;
