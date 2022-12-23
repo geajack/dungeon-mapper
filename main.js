@@ -1,5 +1,5 @@
 import { bind } from "./viewbind.js";
-import { render, setTool } from "./app.js";
+import { render, setTool, initialize } from "./app.js";
 
 class ToolbarController
 {
@@ -69,11 +69,14 @@ let canvas = document.querySelector("canvas");
 canvas.width = canvas.clientWidth;
 canvas.height = canvas.clientHeight;
 
-canvas.addEventListener("mousedown", onMouseDown);
-canvas.addEventListener("mouseup", onMouseUp);
-canvas.addEventListener("mousemove", onMouseMove);
-canvas.addEventListener("wheel", onWheel);
-
 let root = bind(document.getElementById("tools"), ToolbarController, [], []);
 
-render();
+(async function()
+{
+    await initialize();
+    canvas.addEventListener("mousedown", onMouseDown);
+    canvas.addEventListener("mouseup", onMouseUp);
+    canvas.addEventListener("mousemove", onMouseMove);
+    canvas.addEventListener("wheel", onWheel);
+    render();
+})();

@@ -41,15 +41,23 @@ class Drag
 
 class TileMap
 {
-    constructor()
+    constructor(bitmap)
     {
+        let baseSize = 50;
+
         this.matrix = [];
-        while (this.matrix.length < 200)
+        while (this.matrix.length < baseSize)
         {
-            this.matrix.push(new Array(200));
+            this.matrix.push(new Array(baseSize));
         }
         this.x0 = 0;
         this.y0 = 0;
+
+        this.canvas = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
+        this.mask = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
+        this.pattern = context.createPattern(bitmap, "repeat");
+        this.canvas.getContext("2d").fillStyle = this.pattern;
+        // this.canvas.getContext("2d").fillRect(0, 0, 50 * baseSize, 50 * baseSize);
     }
 
     draw(x, y)
@@ -96,6 +104,36 @@ class TileMap
         this.matrix[y - y0][x - x0] = true;
         this.x0 = x0;
         this.y0 = y0;
+
+        {
+            let cx = (x - x0) * 50 + 25;
+            let cy = (y - y0) * 50 + 25;
+
+            let fillWidth = 200;
+
+            this.mask.getContext("2d").fillStyle = "black";
+            const gradient = this.mask.getContext("2d").createRadialGradient(cx, cy, 20, cx, cy, 60)
+            gradient.addColorStop(0, "black");
+            gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+            this.mask.getContext("2d").fillStyle = gradient;
+            this.mask.getContext("2d").fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
+            
+            this.canvas.getContext("2d").globalCompositeOperation = "copy";
+            this.canvas.getContext("2d").fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            this.canvas.getContext("2d").globalCompositeOperation = "destination-in";
+            this.canvas.getContext("2d").drawImage(this.mask, 0, 0);
+        }
+    }
+
+    getWidth()
+    {
+        return this.matrix[0].length;
+    }
+
+    getHeight()
+    {
+        return this.matrix.length;
     }
 }
 
@@ -173,7 +211,14 @@ export function render(event)
 
     context.stroke();
 
+    context.drawImage(
+        tileMap.canvas,
+        pixelsPerMeter * (tileMap.x0 - worldCoordinates.x), pixelsPerMeter * (tileMap.y0 - worldCoordinates.y),
+        pixelsPerMeter * tileMap.getWidth(), pixelsPerMeter * tileMap.getHeight()
+    );
+
     context.strokeStyle = "#000000";
+    context.fillStyle = "#F0ECE0";
     context.lineWidth = 4;
 
     context.beginPath();
@@ -184,13 +229,15 @@ export function render(event)
         for (let xOffset = 0; xOffset < row.length; xOffset++)
         {
             if (row[xOffset])
-            {
+            {                
                 let x = xOffset + tileMap.x0;
                 let y = yOffset + tileMap.y0;
                 
                 let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
                 px *= pixelsPerMeter;
                 py *= pixelsPerMeter;
+
+                context.fillRect(px, py, pixelsPerMeter, pixelsPerMeter);
 
                 if (!row[xOffset + 1])
                 {
@@ -215,22 +262,44 @@ export function render(event)
                     context.moveTo(px - 2, py);
                     context.lineTo(px + pixelsPerMeter + 2, py);
                 }
+                
             }
         }
     }
-
+    
     context.stroke();
 }
 
-let canvas = document.querySelector("canvas");
-let context = canvas.getContext("2d");
-
-let worldCoordinates = { x: 0, y: 0 };
-let pixelsPerMeter = 30;
-let drag = new Drag();
-let tileMap = new TileMap();
+export async function initialize()
+{
+    let bitmap;
+    let imageURL = "./hatching.png";
+    let image = new Image();
+    image.src = imageURL;
+    await new Promise((resolve, reject) => {
+        image.onload = resolve;
+    });
+    bitmap = await createImageBitmap(image);
+    tileMap = new TileMap(bitmap);
+}
 
 export const Tools = {
     MOVE: Symbol(), DRAW: Symbol()
 };
-let tool = Tools.DRAW;
+
+let canvas;
+let worldCoordinates;
+let pixelsPerMeter;
+let drag;
+let tileMap;
+let context;
+let tool;
+
+canvas = document.querySelector("canvas");
+context = canvas.getContext("2d");
+
+worldCoordinates = { x: 0, y: 0 };
+pixelsPerMeter = 30;
+drag = new Drag();
+
+tool = Tools.DRAW;
