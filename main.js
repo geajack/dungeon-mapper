@@ -78,4 +78,10 @@ let canvas = document.querySelector("canvas");
 let toolbar = bind(document.getElementById("tools"), ToolbarController, [], []);
 let app = new App(canvas);
 
+addEventListener("resize", () => {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    app.render()
+});
+
 initialize();
