@@ -77,3 +77,5 @@ async function initialize()
 let canvas = document.querySelector("canvas");
 let toolbar = bind(document.getElementById("tools"), ToolbarController, [], []);
 let app = new App(canvas);
+
+initialize();

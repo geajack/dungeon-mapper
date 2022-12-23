@@ -53,11 +53,14 @@ class TileMap
         this.x0 = 0;
         this.y0 = 0;
 
-        this.canvas = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
-        this.mask = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
-        this.pattern = context.createPattern(bitmap, "repeat");
-        this.canvas.getContext("2d").fillStyle = this.pattern;
-        // this.canvas.getContext("2d").fillRect(0, 0, 50 * baseSize, 50 * baseSize);
+        let canvas = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
+        let mask = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
+        this.pattern = canvas.getContext("2d").createPattern(bitmap, "repeat");
+        canvas.getContext("2d").fillStyle = this.pattern;
+
+        this.hatching = canvas.getContext("2d");
+        this.mask = mask.getContext("2d");
+        this.canvas = canvas;
     }
 
     draw(x, y)
@@ -66,6 +69,8 @@ class TileMap
         let y0 = this.y0;
         let width = this.matrix[0].length;
         let height = this.matrix.length;
+
+        let sizeChanged = false;
 
         const bufferSize = 10;
 
@@ -77,6 +82,7 @@ class TileMap
             {
                 row.unshift(...new Array(bufferSize));
             }
+            sizeChanged = true;
         }
 
         while (x >= x0 + width - 1)
@@ -86,24 +92,49 @@ class TileMap
             {
                 row.concat(...new Array(bufferSize));
             }
+            sizeChanged = true;
         }
 
         while (y <= y0)
         {
             y0 -= bufferSize;
             height += bufferSize;
-            this.matrix.unshift(...new Array(bufferSize));
+            let newRows = [];
+            while (newRows.length < bufferSize)
+            {
+                newRows.push(new Array(width));
+            }
+            this.matrix.unshift(...newRows);
+            sizeChanged = true;
         }
 
         while (y >= y0 + height  - 1)
         {
+            while (this.matrix.length < height + bufferSize)
+            {
+                this.matrix.push(new Array(width));
+            }
             height += bufferSize;
-            this.matrix.push(...new Array(bufferSize));
+            sizeChanged = true;
         }
 
-        this.matrix[y - y0][x - x0] = true;
+        if (sizeChanged)
+        {
+            let tempCanvas = new OffscreenCanvas(this.canvas.width, this.canvas.height);
+            tempCanvas.getContext("2d").drawImage(this.mask.canvas, 0, 0);
+            this.mask.canvas.width = 50 * width;
+            this.mask.canvas.height = 50 * height;
+            this.mask.canvas.getContext("2d").drawImage(tempCanvas, 50 * (this.x0 - x0), 50 * (this.y0 - y0));
+            
+            this.canvas.width = 50 * width;
+            this.canvas.height = 50 * height;
+            this.canvas.getContext("2d").fillStyle = this.pattern;
+            this.canvas.getContext("2d").fillRect(0, 0, 50 * width, 50 * height);
+        }
+        
         this.x0 = x0;
         this.y0 = y0;
+        this.matrix[y - y0][x - x0] = true;
 
         {
             let cx = (x - x0) * 50 + 25;
@@ -111,18 +142,18 @@ class TileMap
 
             let fillWidth = 200;
 
-            this.mask.getContext("2d").fillStyle = "black";
-            const gradient = this.mask.getContext("2d").createRadialGradient(cx, cy, 20, cx, cy, 60)
+            const gradient = this.mask.createRadialGradient(cx, cy, 20, cx, cy, 60)
             gradient.addColorStop(0, "black");
             gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-            this.mask.getContext("2d").fillStyle = gradient;
-            this.mask.getContext("2d").fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
+            this.mask.fillStyle = gradient;
+            this.mask.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
             
-            this.canvas.getContext("2d").globalCompositeOperation = "copy";
-            this.canvas.getContext("2d").fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.hatching.globalCompositeOperation = "copy";
+            this.canvas.getContext("2d").fillStyle = this.pattern;
+            this.hatching.fillRect(0, 0, width * 50, height * 50);
             
-            this.canvas.getContext("2d").globalCompositeOperation = "destination-in";
-            this.canvas.getContext("2d").drawImage(this.mask, 0, 0);
+            this.hatching.globalCompositeOperation = "destination-in";
+            this.hatching.drawImage(this.mask.canvas, 0, 0);
         }
     }
 
@@ -166,7 +197,7 @@ export class App
 
     setTool(toolName)
     {
-        tool = Tools[toolName];
+        this.tool = Tools[toolName];
     }
 
     render(event)
