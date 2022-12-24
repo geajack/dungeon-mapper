@@ -53,14 +53,9 @@ class TileMap
         this.x0 = 0;
         this.y0 = 0;
 
-        let canvas = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
-        let mask = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
-        this.pattern = canvas.getContext("2d").createPattern(bitmap, "repeat");
-        canvas.getContext("2d").fillStyle = this.pattern;
-
-        this.hatching = canvas.getContext("2d");
-        this.mask = mask.getContext("2d");
-        this.canvas = canvas;
+        this.hatching = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
+        this.mask = new OffscreenCanvas(50 * baseSize, 50 * baseSize);;
+        this.pattern = this.hatching.getContext("2d").createPattern(bitmap, "repeat");
     }
 
     draw(x, y)
@@ -120,16 +115,16 @@ class TileMap
 
         if (sizeChanged)
         {
-            let tempCanvas = new OffscreenCanvas(this.canvas.width, this.canvas.height);
-            tempCanvas.getContext("2d").drawImage(this.mask.canvas, 0, 0);
-            this.mask.canvas.width = 50 * width;
-            this.mask.canvas.height = 50 * height;
-            this.mask.canvas.getContext("2d").drawImage(tempCanvas, 50 * (this.x0 - x0), 50 * (this.y0 - y0));
+            let tempCanvas = new OffscreenCanvas(this.hatching.width, this.hatching.height);
+            tempCanvas.getContext("2d").drawImage(this.mask, 0, 0);
+            this.mask.width = 50 * width;
+            this.mask.height = 50 * height;
+            this.mask.getContext("2d").drawImage(tempCanvas, 50 * (this.x0 - x0), 50 * (this.y0 - y0));
             
-            this.canvas.width = 50 * width;
-            this.canvas.height = 50 * height;
-            this.canvas.getContext("2d").fillStyle = this.pattern;
-            this.canvas.getContext("2d").fillRect(0, 0, 50 * width, 50 * height);
+            this.hatching.width = 50 * width;
+            this.hatching.height = 50 * height;
+            this.hatching.getContext("2d").fillStyle = this.pattern;
+            this.hatching.getContext("2d").fillRect(0, 0, 50 * width, 50 * height);
         }
         
         this.x0 = x0;
@@ -142,18 +137,20 @@ class TileMap
 
             let fillWidth = 200;
 
-            const gradient = this.mask.createRadialGradient(cx, cy, 20, cx, cy, 60)
+            let maskContext = this.mask.getContext("2d");
+            let hatchingContext = this.hatching.getContext("2d");
+
+            let gradient = maskContext.createRadialGradient(cx, cy, 20, cx, cy, 60)
             gradient.addColorStop(0, "black");
             gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-            this.mask.fillStyle = gradient;
-            this.mask.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
+            maskContext.fillStyle = gradient;
+            maskContext.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);            
             
-            this.hatching.globalCompositeOperation = "copy";
-            this.canvas.getContext("2d").fillStyle = this.pattern;
-            this.hatching.fillRect(0, 0, width * 50, height * 50);
-            
-            this.hatching.globalCompositeOperation = "destination-in";
-            this.hatching.drawImage(this.mask.canvas, 0, 0);
+            hatchingContext.globalCompositeOperation = "copy";
+            hatchingContext.fillStyle = this.pattern;
+            hatchingContext.fillRect(0, 0, width * 50, height * 50);            
+            hatchingContext.globalCompositeOperation = "destination-in";
+            hatchingContext.drawImage(this.mask, 0, 0);
         }
     }
 
@@ -170,19 +167,21 @@ class TileMap
 
             let fillWidth = 200;
 
-            const gradient = this.mask.createRadialGradient(cx, cy, 20, cx, cy, 60)
+            let maskContext = this.mask.getContext("2d");
+            let hatchingContext = this.hatching.getContext("2d");
+
+            let gradient = maskContext.createRadialGradient(cx, cy, 20, cx, cy, 60)
             gradient.addColorStop(0, "black");
             gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-            this.mask.globalCompositeOperation = "destination-out";
-            this.mask.fillStyle = gradient;
-            this.mask.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
+            maskContext.fillStyle = gradient;
+            maskContext.globalCompositeOperation = "destination-out";
+            maskContext.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
             
-            this.hatching.globalCompositeOperation = "copy";
-            this.canvas.getContext("2d").fillStyle = this.pattern;
-            this.hatching.fillRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);
-            
-            this.hatching.globalCompositeOperation = "destination-in";
-            this.hatching.drawImage(this.mask.canvas, 0, 0);
+            hatchingContext.globalCompositeOperation = "copy";
+            hatchingContext.fillStyle = this.pattern;
+            hatchingContext.fillRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);            
+            hatchingContext.globalCompositeOperation = "destination-in";
+            hatchingContext.drawImage(this.mask, 0, 0);
         }
     }
 
@@ -314,7 +313,7 @@ export class App
         context.stroke();
 
         context.drawImage(
-            tileMap.canvas,
+            tileMap.hatching,
             pixelsPerMeter * (tileMap.x0 - worldCoordinates.x), pixelsPerMeter * (tileMap.y0 - worldCoordinates.y),
             pixelsPerMeter * tileMap.getWidth(), pixelsPerMeter * tileMap.getHeight()
         );
