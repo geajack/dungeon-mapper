@@ -123,22 +123,21 @@ function bindChild(childNode, parentController, childController, controllerClass
         }
     }
 
-    
+    let childNodeOrController = childController ? childController : childNode;
+    for (let attribute of childNode.attributes)
+    {
+        if (attribute.name.startsWith("vb-"))
+        {
+            let parameterName = attribute.name.slice(3);
+            childNodeOrController[parameterName] = attribute.value;
+        }
+    }
+
     if (childController)
     {
         if (childController.initialize)
         {
-            let parameters = {};
-            for (let attribute of childNode.attributes)
-            {
-                if (attribute.name.startsWith("vb-"))
-                {
-                    let parameterName = attribute.name.slice(3);
-                    parameters[parameterName] = attribute.value;
-                }
-            }
-
-            childController.initialize(nodeOrFragment, parameters);
+            childController.initialize(nodeOrFragment);
         }
     }
 

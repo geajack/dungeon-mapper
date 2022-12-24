@@ -5,16 +5,19 @@ class ToolbarController
 {
     initialize()
     {
-        this.move.addEventListener("click", () => this.onClick(this.move, "MOVE"));
-        this.draw.addEventListener("click", () => this.onClick(this.draw, "DRAW"));
-        this.erase.addEventListener("click", () => this.onClick(this.erase, "ERASE"));
+        for (let button of this.buttons)
+        {
+            button.addEventListener("click", () => this.onClick(button));
+        }
     }
 
-    onClick(button, toolName)
+    onClick(button)
     {
-        app.setTool(toolName);
-        this.move.classList.remove("selected");
-        this.draw.classList.remove("selected");
+        app.setTool(button.tool);
+        for (let button of this.buttons)
+        {
+            button.classList.remove("selected");
+        }
         button.classList.add("selected");
     }
 }
