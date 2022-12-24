@@ -7,6 +7,7 @@ class ToolbarController
     {
         this.move.addEventListener("click", () => this.onClick(this.move, "MOVE"));
         this.draw.addEventListener("click", () => this.onClick(this.draw, "DRAW"));
+        this.erase.addEventListener("click", () => this.onClick(this.erase, "ERASE"));
     }
 
     onClick(button, toolName)

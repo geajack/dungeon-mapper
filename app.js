@@ -157,6 +157,35 @@ class TileMap
         }
     }
 
+    erase(x, y)
+    {
+        this.matrix[y - this.y0][x - this.x0] = false;
+
+        {
+            let x0 = this.x0;
+            let y0 = this.y0;
+
+            let cx = (x - x0) * 50 + 25;
+            let cy = (y - y0) * 50 + 25;
+
+            let fillWidth = 200;
+
+            const gradient = this.mask.createRadialGradient(cx, cy, 20, cx, cy, 60)
+            gradient.addColorStop(0, "black");
+            gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+            this.mask.globalCompositeOperation = "destination-out";
+            this.mask.fillStyle = gradient;
+            this.mask.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
+            
+            this.hatching.globalCompositeOperation = "copy";
+            this.canvas.getContext("2d").fillStyle = this.pattern;
+            this.hatching.fillRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);
+            
+            this.hatching.globalCompositeOperation = "destination-in";
+            this.hatching.drawImage(this.mask.canvas, 0, 0);
+        }
+    }
+
     getWidth()
     {
         return this.matrix[0].length;
@@ -243,13 +272,17 @@ export class App
                 worldCoordinates.y -= drag.getDy() / pixelsPerMeter;
             }
 
-            if (drag.dragging && tool === Tools.DRAW)
+            if (drag.dragging)
             {
                 let x = worldCoordinates.x + drag.x1 / pixelsPerMeter;
                 let y = worldCoordinates.y + drag.y1 / pixelsPerMeter;
                 x = Math.floor(x);
                 y = Math.floor(y);
-                tileMap.draw(x, y);
+                
+                if (tool === Tools.DRAW)
+                    tileMap.draw(x, y);
+                else if (tool === Tools.ERASE)
+                    tileMap.erase(x, y);
             }
         }
 
@@ -341,5 +374,5 @@ export class App
 }
 
 const Tools = {
-    MOVE: Symbol(), DRAW: Symbol()
+    MOVE: Symbol(), DRAW: Symbol(), ERASE: Symbol()
 };
