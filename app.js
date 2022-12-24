@@ -125,64 +125,94 @@ class TileMap
             this.hatching.height = 50 * height;
             this.hatching.getContext("2d").fillStyle = this.pattern;
             this.hatching.getContext("2d").fillRect(0, 0, 50 * width, 50 * height);
-        }
+        }        
         
         this.x0 = x0;
         this.y0 = y0;
         this.matrix[y - y0][x - x0] = true;
 
-        {
-            let cx = (x - x0) * 50 + 25;
-            let cy = (y - y0) * 50 + 25;
+        this.drawMask(x, y);
 
-            let fillWidth = 200;
+        let hatchingContext = this.hatching.getContext("2d");
+        hatchingContext.globalCompositeOperation = "copy";
+        hatchingContext.fillStyle = this.pattern;
+        hatchingContext.fillRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);
+        hatchingContext.globalCompositeOperation = "destination-in";
+        hatchingContext.drawImage(this.mask, 0, 0);
+    }
 
-            let maskContext = this.mask.getContext("2d");
-            let hatchingContext = this.hatching.getContext("2d");
+    drawMask(x, y)
+    {
+        let x0 = this.x0;
+        let y0 = this.y0;
 
-            let gradient = maskContext.createRadialGradient(cx, cy, 20, cx, cy, 60)
-            gradient.addColorStop(0, "black");
-            gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-            maskContext.fillStyle = gradient;
-            maskContext.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);            
-            
-            hatchingContext.globalCompositeOperation = "copy";
-            hatchingContext.fillStyle = this.pattern;
-            hatchingContext.fillRect(0, 0, width * 50, height * 50);            
-            hatchingContext.globalCompositeOperation = "destination-in";
-            hatchingContext.drawImage(this.mask, 0, 0);
-        }
+        let cx = (x - x0) * 50 + 25;
+        let cy = (y - y0) * 50 + 25;
+
+        let fillWidth = 200;
+
+        let maskContext = this.mask.getContext("2d");
+        let hatchingContext = this.hatching.getContext("2d");
+
+        let gradient = maskContext.createRadialGradient(cx, cy, 40, cx, cy, 60)
+        gradient.addColorStop(0, "black");
+        gradient.addColorStop(1, "white");
+        maskContext.globalCompositeOperation = "darken";
+        maskContext.fillStyle = gradient;
+        maskContext.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
     }
 
     erase(x, y)
     {
         this.matrix[y - this.y0][x - this.x0] = false;
 
+        let x0 = this.x0;
+        let y0 = this.y0;
+        let maskContext = this.mask.getContext("2d");
+
+        maskContext.clearRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);
+
+        for (let y = 0; y < this.getHeight(); y++)
         {
-            let x0 = this.x0;
-            let y0 = this.y0;
-
-            let cx = (x - x0) * 50 + 25;
-            let cy = (y - y0) * 50 + 25;
-
-            let fillWidth = 200;
-
-            let maskContext = this.mask.getContext("2d");
-            let hatchingContext = this.hatching.getContext("2d");
-
-            let gradient = maskContext.createRadialGradient(cx, cy, 20, cx, cy, 60)
-            gradient.addColorStop(0, "black");
-            gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-            maskContext.fillStyle = gradient;
-            maskContext.globalCompositeOperation = "destination-out";
-            maskContext.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
-            
-            hatchingContext.globalCompositeOperation = "copy";
-            hatchingContext.fillStyle = this.pattern;
-            hatchingContext.fillRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);            
-            hatchingContext.globalCompositeOperation = "destination-in";
-            hatchingContext.drawImage(this.mask, 0, 0);
+            for (let x = 0; x < this.getWidth(); x++)
+            {
+                if (this.matrix[y][x])
+                {
+                    this.drawMask(x + x0, y + y0);
+                }
+            }
         }
+
+        let hatchingContext = this.hatching.getContext("2d");
+        hatchingContext.globalCompositeOperation = "source-over";
+        hatchingContext.fillStyle = this.pattern;
+        hatchingContext.fillRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);
+        hatchingContext.globalCompositeOperation = "destination-in";
+        hatchingContext.drawImage(this.mask, 0, 0);
+
+        // {
+
+        //     let cx = (x - x0) * 50 + 25;
+        //     let cy = (y - y0) * 50 + 25;
+
+        //     let fillWidth = 200;
+
+        //     let maskContext = this.mask.getContext("2d");
+        //     let hatchingContext = this.hatching.getContext("2d");
+
+        //     let gradient = maskContext.createRadialGradient(cx, cy, 20, cx, cy, 60)
+        //     gradient.addColorStop(0, "black");
+        //     gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+        //     maskContext.fillStyle = gradient;
+        //     maskContext.globalCompositeOperation = "destination-out";
+        //     maskContext.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
+            
+        //     hatchingContext.globalCompositeOperation = "copy";
+        //     hatchingContext.fillStyle = this.pattern;
+        //     hatchingContext.fillRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);            
+        //     hatchingContext.globalCompositeOperation = "destination-in";
+        //     hatchingContext.drawImage(this.mask, 0, 0);
+        // }
     }
 
     getWidth()
