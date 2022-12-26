@@ -108,15 +108,10 @@ export class Hatching
             let newHeight = newY1 - newY0;
 
             let tempCanvas = new OffscreenCanvas(this.hatching.width, this.hatching.height);
-            tempCanvas.getContext("2d").drawImage(this.mask, 0, 0);
-            this.mask.width = 50 * newWidth;
-            this.mask.height = 50 * newHeight;
-            this.mask.getContext("2d").drawImage(tempCanvas, 50 * (this.x0 - newX0), 50 * (this.y0 - newY0));
-
+            tempCanvas.getContext("2d").drawImage(this.hatching, 0, 0);
             this.hatching.width = 50 * newWidth;
             this.hatching.height = 50 * newHeight;
-            this.hatching.getContext("2d").fillStyle = this.pattern;
-            this.hatching.getContext("2d").fillRect(0, 0, 50 * newWidth, 50 * newHeight);
+            this.hatching.getContext("2d").drawImage(tempCanvas, 50 * (this.x0 - newX0), 50 * (this.y0 - newY0));
 
             this.x0 = newX0;
             this.y0 = newY0;
@@ -128,8 +123,16 @@ export class Hatching
         let cx = 50 * (x - this.x0);
         let cy = 50 * (y - this.y0);
 
-        let patchX = cx - r;
-        let patchY = cy - r;
+        let patchX = 50 * (x - r);
+        let patchY = 50 * (y - r);
+        while (patchX < 0)
+        {
+            patchX += this.referenceHatching.width / 2;
+        }
+        while (patchY < 0)
+        {
+            patchY += this.referenceHatching.height / 2;
+        }
         while (patchX > this.referenceHatching.width / 2)
         {
             patchX -= this.referenceHatching.width / 2;
