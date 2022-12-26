@@ -294,6 +294,15 @@ export class App
         let bitmap = await createImageBitmap(image);
         this.tileMap = new TileMap();
         this.hatching = new Hatching(bitmap);
+        this.symbols = [];
+
+        imageURL = "./resources/star.png";
+        let image2 = new Image();
+        image2.src = imageURL;
+        await new Promise((resolve, reject) => {
+            image2.onload = resolve;
+        });
+        this.symbol = image2;
     }
 
     setTool(toolName)
@@ -365,6 +374,25 @@ export class App
                 else if (tool === Tools.ERASE_HALLWAY)
                 {
                     tileMap.erase(x, y);
+                }
+                else if (tool === Tools.DRAW_SYMBOL)
+                {
+                    this.symbols.push(
+                        {
+                            x: Math.floor(x),
+                            y: Math.floor(y),
+                        }
+                    );
+                }
+                else if (tool === Tools.ERASE_SYMBOL)
+                {
+                    let index = this.symbols.findIndex(
+                        symbol => symbol.x === Math.floor(x) && symbol.y === Math.floor(y)
+                    );
+                    if (index >= 0)
+                    {
+                        this.symbols.splice(index, 1);
+                    }
                 }
             }
         }
@@ -456,6 +484,14 @@ export class App
         }
         
         context.stroke();
+
+        for (let symbol of this.symbols)
+        {
+            let [px, py] = [symbol.x - worldCoordinates.x, symbol.y - worldCoordinates.y];
+            px *= pixelsPerMeter;
+            py *= pixelsPerMeter;
+            context.drawImage(this.symbol, px, py, pixelsPerMeter, pixelsPerMeter);
+        }
     }
 }
 
@@ -464,5 +500,7 @@ const Tools = {
     DRAW_HALLWAY: Symbol(),
     ERASE_HALLWAY: Symbol(),
     DRAW_BACKGROUND: Symbol(),
-    ERASE_BACKGROUND: Symbol()
+    ERASE_BACKGROUND: Symbol(),
+    DRAW_SYMBOL: Symbol(),
+    ERASE_SYMBOL: Symbol()
 };

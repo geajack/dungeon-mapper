@@ -19,7 +19,8 @@ class ToolbarController
 
         this.subtoolChoices = {
             "HALLWAY": "DRAW",
-            "BACKGROUND": "DRAW"
+            "BACKGROUND": "DRAW",
+            "SYMBOL": "DRAW"
         };
 
         this.setTool();
