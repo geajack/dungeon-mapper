@@ -25,6 +25,19 @@ footer
 
 #tools
 {
+    
+}
+
+#subtools
+{
+    width: fit-content;
+    align-items: center;
+    margin: auto;
+    margin-bottom: 10px;
+}
+
+.toolbox
+{
     border: 3px solid black;
     box-sizing: border-box;
     border-radius: 10px;
@@ -35,32 +48,16 @@ footer
     gap: 15px;
     padding: 10px;
     box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, 0.75);
-    background-color: #F0ECE0;
-}
-
-#subtools
-{
-    border: 3px solid black;
-    box-sizing: border-box;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: row;
-    width: fit-content;
-    align-items: center;
-    gap: 15px;
-    padding: 10px;
-    box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, 0.75);
-    background-color: #F0ECE0;
-    margin: auto;
-    margin-bottom: 10px;
+    background-color: #222;
 }
 
 .toolbox button
 {
     height: 45px;
     width: 45px;
-    border: 1px solid black;
+    border: 1px solid white;
     border-radius: 5px;
+    filter: invert();
 }
 
 .toolbox button img
@@ -72,5 +69,5 @@ footer
 
 .toolbox button.selected
 {
-    filter: invert();
+    filter: invert(0);
 }

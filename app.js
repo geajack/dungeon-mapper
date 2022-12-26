@@ -55,7 +55,10 @@ export class Hatching
         
         this.referenceHatching = new OffscreenCanvas(bitmap.width * 2, bitmap.height * 2);
         this.pattern = this.referenceHatching.getContext("2d").createPattern(bitmap, "repeat");
+        this.referenceHatching.getContext("2d").fillStyle = "#de6300";
+        this.referenceHatching.getContext("2d").fillRect(0, 0, 50 * baseSize, 50 * baseSize);
         this.referenceHatching.getContext("2d").fillStyle = this.pattern;
+        this.referenceHatching.getContext("2d").globalCompositeOperation = "destination-in";
         this.referenceHatching.getContext("2d").fillRect(0, 0, 50 * baseSize, 50 * baseSize);
         
         let r = 50 * this.radiusInMeters;
@@ -148,6 +151,9 @@ export class Hatching
         {
             let targetAlpha = Math.min(referencePixels[i + 3], this.maskPixels[i]);
             let alpha = Math.max(targetAlpha, existingPixels[i + 3]);
+            existingPixels[i] = referencePixels[i];
+            existingPixels[i + 1] = referencePixels[i + 1];
+            existingPixels[i + 2] = referencePixels[i + 2];
             existingPixels[i + 3] = alpha;
         }
         this.hatching.getContext("2d").putImageData(new ImageData(existingPixels, 2*r, 2*r), cx - r, cy - r);
@@ -366,9 +372,10 @@ export class App
         let dx = Math.ceil(worldCoordinates.x) - worldCoordinates.x;
         let dy = Math.ceil(worldCoordinates.y) - worldCoordinates.y;
         
-        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "#111";
+        context.fillRect(0, 0, canvas.width, canvas.height);
         
-        context.strokeStyle = "#bfbbb1";
+        context.strokeStyle = "#291e10";
         context.lineWidth = 2;
         context.beginPath();
 
@@ -398,8 +405,8 @@ export class App
             pixelsPerMeter * this.hatching.heightInMeters
         );
 
-        context.strokeStyle = "#000000";
-        context.fillStyle = "#F0ECE0";
+        context.strokeStyle = "#de6300";
+        context.fillStyle = "#111";
         context.lineWidth = 4;
 
         context.beginPath();
