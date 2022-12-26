@@ -291,7 +291,7 @@ export class App
         await new Promise((resolve, reject) => {
             image.onload = resolve;
         });
-        let bitmap = await createImageBitmap(image);
+        let bitmap = await createImageBitmap(image, { resizeWidth: 300, resizeHeight: 300 });
         this.tileMap = new TileMap();
         this.hatching = new Hatching(bitmap);
         this.symbols = [];
