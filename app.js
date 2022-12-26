@@ -180,8 +180,6 @@ class TileMap
         let width = this.matrix[0].length;
         let height = this.matrix.length;
 
-        let sizeChanged = false;
-
         const bufferSize = 10;
 
         while (x <= x0)
@@ -192,7 +190,6 @@ class TileMap
             {
                 row.unshift(...new Array(bufferSize));
             }
-            sizeChanged = true;
         }
 
         while (x >= x0 + width - 1)
@@ -202,7 +199,6 @@ class TileMap
             {
                 row.push(...new Array(bufferSize));
             }
-            sizeChanged = true;
         }
 
         while (y <= y0)
@@ -215,7 +211,6 @@ class TileMap
                 newRows.push(new Array(width));
             }
             this.matrix.unshift(...newRows);
-            sizeChanged = true;
         }
 
         while (y >= y0 + height  - 1)
@@ -225,7 +220,6 @@ class TileMap
                 this.matrix.push(new Array(width));
             }
             height += bufferSize;
-            sizeChanged = true;
         }
 
         this.matrix[y - y0][x - x0] = true;
@@ -337,7 +331,9 @@ export class App
                     this.hatching.draw(x, y);
                 }
                 else if (tool === Tools.ERASE)
+                {
                     tileMap.erase(x, y);
+                }
             }
         }
 
