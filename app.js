@@ -152,6 +152,22 @@ export class Hatching
         }
         this.hatching.getContext("2d").putImageData(new ImageData(existingPixels, 2*r, 2*r), cx - r, cy - r);
     }
+
+    erase(x, y)
+    {
+        let r  = 50 * this.radiusInMeters;
+        let cx = 50 * (x - this.x0);
+        let cy = 50 * (y - this.y0);
+
+        let existingPixels = this.hatching.getContext("2d").getImageData(cx - r, cy - r, 2*r, 2*r).data;
+        for (let i = 0; i < existingPixels.length; i += 4)
+        {
+            let targetAlpha = 255 - this.maskPixels[i];
+            let alpha = Math.min(targetAlpha, existingPixels[i + 3]);
+            existingPixels[i + 3] = alpha;
+        }
+        this.hatching.getContext("2d").putImageData(new ImageData(existingPixels, 2*r, 2*r), cx - r, cy - r);
+    }
 }
 
 
@@ -325,12 +341,20 @@ export class App
                 let x = worldCoordinates.x + drag.x1 / pixelsPerMeter;
                 let y = worldCoordinates.y + drag.y1 / pixelsPerMeter;
                 
-                if (tool === Tools.DRAW)
+                if (tool === Tools.DRAW_HALLWAY)
                 {
                     tileMap.draw(x, y);
                     this.hatching.draw(x, y);
                 }
-                else if (tool === Tools.ERASE)
+                else if (tool === Tools.DRAW_BACKGROUND)
+                {
+                    this.hatching.draw(x, y);
+                }
+                else if (tool === Tools.ERASE_BACKGROUND)
+                {
+                    this.hatching.erase(x, y);
+                }
+                else if (tool === Tools.ERASE_HALLWAY)
                 {
                     tileMap.erase(x, y);
                 }
@@ -427,5 +451,9 @@ export class App
 }
 
 const Tools = {
-    MOVE: Symbol(), DRAW: Symbol(), ERASE: Symbol()
+    MOVE: Symbol(),
+    DRAW_HALLWAY: Symbol(),
+    ERASE_HALLWAY: Symbol(),
+    DRAW_BACKGROUND: Symbol(),
+    ERASE_BACKGROUND: Symbol()
 };

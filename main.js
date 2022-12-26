@@ -5,20 +5,80 @@ class ToolbarController
 {
     initialize()
     {
-        for (let button of this.buttons)
+        for (let button of this.tools)
         {
-            button.addEventListener("click", () => this.onClick(button));
+            button.addEventListener("click", () => this.onClickTool(button));
         }
+
+        for (let button of this.subtools)
+        {
+            button.addEventListener("click", () => this.onClickSubtool(button));
+        }
+
+        this.tool = "HALLWAY";
+
+        this.subtoolChoices = {
+            "HALLWAY": "DRAW",
+            "BACKGROUND": "DRAW"
+        };
+
+        this.setTool();
     }
 
-    onClick(button)
+    setTool()
     {
-        app.setTool(button.tool);
-        for (let button of this.buttons)
+        let tool = this.tool;
+        if (this.subtoolChoices[tool])
+        {
+            tool = this.subtoolChoices[tool] + "_" + tool;
+        }
+        app.setTool(tool);
+    }
+
+    onClickTool(button)
+    {
+        // app.setTool(button.tool);
+        for (let button of this.tools)
         {
             button.classList.remove("selected");
         }
         button.classList.add("selected");
+
+        if (button.subtools == "yes")
+        {
+            this.subtoolBox.style.display = "flex";
+
+            let subtool = this.subtoolChoices[button.tool];
+            for (let button of this.subtools)
+            {
+                button.classList.remove("selected");
+                if (button.tool == subtool)
+                {
+                    button.classList.add("selected");
+                }
+            }            
+        }
+        else
+        {
+            this.subtoolBox.style.display = "none";
+        }
+
+        this.tool = button.tool;
+
+        this.setTool();
+    }
+    
+    onClickSubtool(button)
+    {
+        // app.setTool(button.tool);
+        for (let button of this.subtools)
+        {
+            button.classList.remove("selected");
+        }
+        button.classList.add("selected");
+        
+        this.subtoolChoices[this.tool] = button.tool;
+        this.setTool();
     }
 }
 
@@ -79,8 +139,8 @@ async function initialize()
 }
 
 let canvas = document.querySelector("canvas");
-let toolbar = bind(document.getElementById("tools"), ToolbarController, [], []);
 let app = new App(canvas);
+let toolbar = bind(document.querySelector("footer"), ToolbarController, [], []);
 
 addEventListener("resize", () => {
     canvas.width = canvas.clientWidth;

@@ -10,11 +10,32 @@
 </head>
 <body>
     <canvas></canvas>
-    <div id="tools">
-        <button bind="buttons[]" vb-tool="MOVE">M</button>
-        <button bind="buttons[]" vb-tool="DRAW" class="selected">D</button>
-        <button bind="buttons[]" vb-tool="ERASE">E</button>
-        <button>S</button>
-    </div>
+    <footer>
+        <div id="subtools" class="toolbox" bind="subtoolBox">
+            <button bind="subtools[]" vb-tool="DRAW" class="selected">
+                <img src="resources/pen.svg" />
+            </button>
+            <button bind="subtools[]" vb-tool="ERASE">
+                <img src="resources/eraser.svg" />
+            </button>
+        </div>
+        <div id="tools" class="toolbox">
+            <button bind="tools[]" vb-tool="MOVE" vb-subtools="no">
+                <img src="resources/arrows-up-down-left-right.svg" />
+            </button>
+            <button bind="tools[]" vb-tool="HALLWAY" vb-subtools="yes" class="selected">
+                <img src="resources/square.svg" />
+            </button>
+            <button bind="tools[]" vb-tool="BACKGROUND" vb-subtools="yes">
+                <img src="resources/hatching.png" />
+            </button>
+            <!-- <button bind="buttons[]" vb-tool="ERASE">
+                <img src="resources/eraser.svg" />
+            </button> -->
+            <button vb-subtools="yes">
+                <img src="resources/star.svg" />
+            </button>
+        </div>
+    </footer>
 </body>
 </html>
