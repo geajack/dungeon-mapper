@@ -1,5 +1,3 @@
-import { Timer } from "./debug.js";
-
 class Drag
 {
     constructor()
@@ -239,54 +237,6 @@ class TileMap
         y = Math.floor(y);
 
         this.matrix[y - this.y0][x - this.x0] = false;
-
-        // let x0 = this.x0;
-        // let y0 = this.y0;
-        // let maskContext = this.mask.getContext("2d");
-
-        // maskContext.clearRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);
-
-        // for (let y = 0; y < this.getHeight(); y++)
-        // {
-        //     for (let x = 0; x < this.getWidth(); x++)
-        //     {
-        //         if (this.matrix[y][x])
-        //         {
-        //             this.drawMask(x + x0, y + y0);
-        //         }
-        //     }
-        // }
-
-        // let hatchingContext = this.hatching.getContext("2d");
-        // hatchingContext.globalCompositeOperation = "source-over";
-        // hatchingContext.fillStyle = this.pattern;
-        // hatchingContext.fillRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);
-        // hatchingContext.globalCompositeOperation = "destination-in";
-        // hatchingContext.drawImage(this.mask, 0, 0);
-
-        // {
-
-        //     let cx = (x - x0) * 50 + 25;
-        //     let cy = (y - y0) * 50 + 25;
-
-        //     let fillWidth = 200;
-
-        //     let maskContext = this.mask.getContext("2d");
-        //     let hatchingContext = this.hatching.getContext("2d");
-
-        //     let gradient = maskContext.createRadialGradient(cx, cy, 20, cx, cy, 60)
-        //     gradient.addColorStop(0, "black");
-        //     gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-        //     maskContext.fillStyle = gradient;
-        //     maskContext.globalCompositeOperation = "destination-out";
-        //     maskContext.fillRect(cx - fillWidth / 2, cy - fillWidth / 2, fillWidth, fillWidth);
-            
-        //     hatchingContext.globalCompositeOperation = "copy";
-        //     hatchingContext.fillStyle = this.pattern;
-        //     hatchingContext.fillRect(0, 0, this.getWidth() * 50, this.getHeight() * 50);            
-        //     hatchingContext.globalCompositeOperation = "destination-in";
-        //     hatchingContext.drawImage(this.mask, 0, 0);
-        // }
     }
 
     getWidth()
@@ -317,7 +267,7 @@ export class App
 
     async initialize()
     {
-        let imageURL = "./hatching.png";
+        let imageURL = "./resources/hatching.png";
         let image = new Image();
         image.src = imageURL;
         await new Promise((resolve, reject) => {
@@ -483,5 +433,3 @@ export class App
 const Tools = {
     MOVE: Symbol(), DRAW: Symbol(), ERASE: Symbol()
 };
-
-let timer = new Timer();
