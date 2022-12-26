@@ -45,6 +45,8 @@ export class Hatching
 {
     constructor(bitmap)
     {
+        this.radiusInMeters = 1.5;
+
         let baseSize = 50;
         this.x0 = 0;
         this.y0 = 0;
@@ -58,9 +60,9 @@ export class Hatching
         this.referenceHatching.getContext("2d").fillStyle = this.pattern;
         this.referenceHatching.getContext("2d").fillRect(0, 0, 50 * baseSize, 50 * baseSize);
         
-        let r = 50 * 3;
+        let r = 50 * this.radiusInMeters;
         this.mask = new OffscreenCanvas(2*r, 2*r);
-        let gradient = this.mask.getContext("2d").createRadialGradient(r, r, 0.5 * r, r, r, 0.9 * r)
+        let gradient = this.mask.getContext("2d").createRadialGradient(r, r, 0.25 * r, r, r, 0.75 * r)
         gradient.addColorStop(0, "white");
         gradient.addColorStop(1, "black");
         this.mask.getContext("2d").fillStyle = gradient;
@@ -119,7 +121,7 @@ export class Hatching
             this.heightInMeters = newHeight;
         }
 
-        let r  = 50 * radiusInMeters;
+        let r  = 50 * this.radiusInMeters;
         let cx = 50 * (x - this.x0);
         let cy = 50 * (y - this.y0);
 
@@ -227,10 +229,15 @@ class TileMap
             height += bufferSize;
             sizeChanged = true;
         }
+
+        this.matrix[y - y0][x - x0] = true;
     }
 
     erase(x, y)
     {
+        x = Math.floor(x);
+        y = Math.floor(y);
+
         this.matrix[y - this.y0][x - this.x0] = false;
 
         // let x0 = this.x0;
@@ -419,57 +426,57 @@ export class App
             pixelsPerMeter * this.hatching.heightInMeters
         );
 
-        // context.strokeStyle = "#000000";
-        // context.fillStyle = "#F0ECE0";
-        // context.lineWidth = 4;
+        context.strokeStyle = "#000000";
+        context.fillStyle = "#F0ECE0";
+        context.lineWidth = 4;
 
-        // context.beginPath();
+        context.beginPath();
 
-        // for (let yOffset = 0; yOffset < tileMap.matrix.length; yOffset++)
-        // {
-        //     let row = tileMap.matrix[yOffset];
-        //     for (let xOffset = 0; xOffset < row.length; xOffset++)
-        //     {
-        //         if (row[xOffset])
-        //         {                
-        //             let x = xOffset + tileMap.x0;
-        //             let y = yOffset + tileMap.y0;
+        for (let yOffset = 0; yOffset < tileMap.matrix.length; yOffset++)
+        {
+            let row = tileMap.matrix[yOffset];
+            for (let xOffset = 0; xOffset < row.length; xOffset++)
+            {
+                if (row[xOffset])
+                {                
+                    let x = xOffset + tileMap.x0;
+                    let y = yOffset + tileMap.y0;
                     
-        //             let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
-        //             px *= pixelsPerMeter;
-        //             py *= pixelsPerMeter;
+                    let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
+                    px *= pixelsPerMeter;
+                    py *= pixelsPerMeter;
 
-        //             context.fillRect(px, py, pixelsPerMeter, pixelsPerMeter);
+                    context.fillRect(px, py, pixelsPerMeter, pixelsPerMeter);
 
-        //             if (!row[xOffset + 1])
-        //             {
-        //                 context.moveTo(px + pixelsPerMeter, py);
-        //                 context.lineTo(px + pixelsPerMeter, py + pixelsPerMeter);
-        //             }
+                    if (!row[xOffset + 1])
+                    {
+                        context.moveTo(px + pixelsPerMeter, py);
+                        context.lineTo(px + pixelsPerMeter, py + pixelsPerMeter);
+                    }
 
-        //             if (!row[xOffset - 1])
-        //             {
-        //                 context.moveTo(px, py);
-        //                 context.lineTo(px, py + pixelsPerMeter);
-        //             }
+                    if (!row[xOffset - 1])
+                    {
+                        context.moveTo(px, py);
+                        context.lineTo(px, py + pixelsPerMeter);
+                    }
 
-        //             if (!tileMap.matrix[yOffset + 1][xOffset])
-        //             {
-        //                 context.moveTo(px - 2, py + pixelsPerMeter);
-        //                 context.lineTo(px + pixelsPerMeter + 2, py + pixelsPerMeter);
-        //             }
+                    if (!tileMap.matrix[yOffset + 1][xOffset])
+                    {
+                        context.moveTo(px - 2, py + pixelsPerMeter);
+                        context.lineTo(px + pixelsPerMeter + 2, py + pixelsPerMeter);
+                    }
 
-        //             if (!tileMap.matrix[yOffset - 1][xOffset])
-        //             {
-        //                 context.moveTo(px - 2, py);
-        //                 context.lineTo(px + pixelsPerMeter + 2, py);
-        //             }
+                    if (!tileMap.matrix[yOffset - 1][xOffset])
+                    {
+                        context.moveTo(px - 2, py);
+                        context.lineTo(px + pixelsPerMeter + 2, py);
+                    }
                     
-        //         }
-        //     }
-        // }
+                }
+            }
+        }
         
-        // context.stroke();
+        context.stroke();
     }
 }
 
