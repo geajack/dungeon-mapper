@@ -238,6 +238,8 @@ class TileMap
             height += bufferSize;
         }
 
+        this.x0 = x0;
+        this.y0 = y0;
         this.matrix[y - y0][x - x0] = true;
     }
 

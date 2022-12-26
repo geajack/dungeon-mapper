@@ -118,6 +118,42 @@ function onMouseMove(event)
     );
 }
 
+function onTouchStart(event)
+{
+    let [x, y] = [event.touches[0].clientX, event.touches[0].clientY];
+    app.render(
+        {
+            type: "mousedown",
+            x: x,
+            y: y
+        }
+    );
+}
+
+function onTouchEnd(event)
+{
+    let [x, y] = [event.changedTouches[0].clientX, event.changedTouches[0].clientY];
+    app.render(
+        {
+            type: "mouseup",
+            x: x,
+            y: y
+        }
+    );
+}
+
+function onTouchMove(event)
+{
+    let [x, y] = [event.touches[0].clientX, event.touches[0].clientY];
+    app.render(
+        {
+            type: "mousemove",
+            x: x,
+            y: y
+        }
+    );
+}
+
 function onWheel(event)
 {
     app.render(
@@ -132,8 +168,11 @@ async function initialize()
 {
     await app.initialize();
     canvas.addEventListener("mousedown", onMouseDown);
+    canvas.addEventListener("touchstart", onTouchStart);
     canvas.addEventListener("mouseup", onMouseUp);
+    canvas.addEventListener("touchend", onTouchEnd);
     canvas.addEventListener("mousemove", onMouseMove);
+    canvas.addEventListener("touchmove", onTouchMove);
     canvas.addEventListener("wheel", onWheel);
     app.render();
 }
