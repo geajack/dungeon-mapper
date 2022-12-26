@@ -50,9 +50,22 @@ export class Hatching
         this.y0 = 0;
         this.widthInMeters = baseSize;
         this.heightInMeters = baseSize;
+
         this.hatching = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
-        this.mask = new OffscreenCanvas(50 * baseSize, 50 * baseSize);
-        this.pattern = this.hatching.getContext("2d").createPattern(bitmap, "repeat");
+        
+        this.referenceHatching = new OffscreenCanvas(bitmap.width * 2, bitmap.height * 2);
+        this.pattern = this.referenceHatching.getContext("2d").createPattern(bitmap, "repeat");
+        this.referenceHatching.getContext("2d").fillStyle = this.pattern;
+        this.referenceHatching.getContext("2d").fillRect(0, 0, 50 * baseSize, 50 * baseSize);
+        
+        let r = 50 * 3;
+        this.mask = new OffscreenCanvas(2*r, 2*r);
+        let gradient = this.mask.getContext("2d").createRadialGradient(r, r, 0.5 * r, r, r, 0.9 * r)
+        gradient.addColorStop(0, "white");
+        gradient.addColorStop(1, "black");
+        this.mask.getContext("2d").fillStyle = gradient;
+        this.mask.getContext("2d").fillRect(0, 0, 2*r, 2*r);
+        this.maskPixels = this.mask.getContext("2d").getImageData(0, 0, this.mask.width, this.mask.height).data
     }
 
     draw(x, y)
@@ -115,32 +128,27 @@ export class Hatching
         let cx = 50 * (x - this.x0);
         let cy = 50 * (y - this.y0);
 
-        let maskContext = this.mask.getContext("2d");
-        
-        let gradient = this.hatching.getContext("2d").createRadialGradient(cx, cy, 0.5 * r, cx, cy, 0.9 * r)
-        gradient.addColorStop(0, "white");
-        gradient.addColorStop(1, "black");
-        maskContext.fillStyle = gradient;
-        maskContext.globalCompositeOperation = "lighten";
-        maskContext.fillRect(cx - r, cy - r, 2 * r, 2 * r);
-
-        let alphaMask = new OffscreenCanvas(this.mask.width, this.mask.height);
-        alphaMask.getContext("2d").drawImage(this.mask, 0, 0);
-        let pixels = alphaMask.getContext("2d").getImageData(0, 0, alphaMask.width, alphaMask.height).data;
-        for (let i = 0; i < pixels.length; i += 4)
+        let patchX = cx - r;
+        let patchY = cy - r;
+        while (patchX > this.referenceHatching.width / 2)
         {
-            pixels[i + 3] = pixels[i];
+            patchX -= this.referenceHatching.width / 2;
         }
-        let writeable = new ImageData(pixels, alphaMask.width, alphaMask.height);
-        alphaMask.getContext("2d").putImageData(writeable, 0, 0);
-        
-        this.hatching.getContext("2d").globalCompositeOperation = "copy"
-        this.hatching.getContext("2d").fillStyle = this.pattern;
-        this.hatching.getContext("2d").fillRect(0, 0, 50 * this.widthInMeters, 50 * this.heightInMeters);
-        this.hatching.getContext("2d").globalCompositeOperation = "destination-in"
-        this.hatching.getContext("2d").drawImage(alphaMask, 0, 0);
-    }
+        while (patchY > this.referenceHatching.height / 2)
+        {
+            patchY -= this.referenceHatching.height / 2;
+        }
 
+        let existingPixels = this.hatching.getContext("2d").getImageData(cx - r, cy - r, 2*r, 2*r).data;
+        let referencePixels = this.referenceHatching.getContext("2d").getImageData(patchX, patchY, 2*r, 2*r).data;
+        for (let i = 0; i < referencePixels.length; i += 4)
+        {
+            let targetAlpha = Math.min(referencePixels[i + 3], this.maskPixels[i]);
+            let alpha = Math.max(targetAlpha, existingPixels[i + 3]);
+            existingPixels[i + 3] = alpha;
+        }
+        this.hatching.getContext("2d").putImageData(new ImageData(existingPixels, 2*r, 2*r), cx - r, cy - r);
+    }
 }
 
 
