@@ -338,15 +338,13 @@ export class App
             "star": await loadImage("./resources/star.png"),
         };
         
-        this.tileMap = new TileMap();
-        let image = await loadImage("./resources/hatching.png");
-        let bitmap = await createImageBitmap(image, { resizeWidth: 300, resizeHeight: 300 });
-        this.hatching = new Hatching(bitmap);
+        await this.reset();
     }
 
     async deserialize(data)
     {
         this.tileMap.deserialize(data.foreground);
+        this.symbols = data.symbols;
         await this.hatching.deserialize(data.background);
     }
 
@@ -354,8 +352,17 @@ export class App
     {
         return {
             "foreground": this.tileMap,
-            "background": await this.hatching.serialize()
+            "background": await this.hatching.serialize(),
+            "symbols": this.symbols
         }
+    }
+
+    async reset()
+    {
+        this.tileMap = new TileMap();
+        let image = await loadImage("./resources/hatching.png");
+        let bitmap = await createImageBitmap(image, { resizeWidth: 300, resizeHeight: 300 });
+        this.hatching = new Hatching(bitmap);
     }
 
     setTool(toolName)

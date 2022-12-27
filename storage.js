@@ -26,7 +26,7 @@ export async function initialize()
         console.log("openDb.onupgradeneeded");
         event.currentTarget.result.createObjectStore(
             DB_STORE_NAME,
-            { keyPath: "key" }
+            { keyPath: ["dungeonName", "level"] }
         );
     };
 
@@ -35,7 +35,7 @@ export async function initialize()
 }
 
 
-export async function put(key, value)
+export async function put(name, level, value)
 {
     let transaction = database.transaction([DB_STORE_NAME], "readwrite");
     let promise = requestAsPromise(transaction, "oncomplete");
@@ -43,7 +43,8 @@ export async function put(key, value)
     let objectStore = transaction.objectStore(DB_STORE_NAME);
     let request = objectStore.put(
         {
-            key: key,
+            dungeonName: name,
+            level: level,
             ...value
         }
     );
@@ -52,13 +53,32 @@ export async function put(key, value)
 }
 
 
-export async function get(key)
+export async function get(name, level)
 {
     let transaction = database.transaction([DB_STORE_NAME], "readonly");
     let promise = requestAsPromise(transaction, "oncomplete");
 
     let objectStore = transaction.objectStore(DB_STORE_NAME);
-    let request = objectStore.get(key);
+    let request = objectStore.get([name, level]);
+
+    let result;
+    request.onsuccess = function(event)
+    {
+        result = event.target.result;
+    };
+
+    await promise;
+    return result;
+}
+
+
+export async function countLevels(name)
+{
+    let transaction = database.transaction([DB_STORE_NAME], "readonly");
+    let promise = requestAsPromise(transaction, "oncomplete");
+
+    let objectStore = transaction.objectStore(DB_STORE_NAME);
+    let request = objectStore.count(IDBKeyRange.bound([name, 0], [name, 0xFFFF]));
 
     let result;
     request.onsuccess = function(event)
@@ -72,6 +92,6 @@ export async function get(key)
 
 
 const DB_NAME = "storage";
-const DB_STORE_NAME = "storage";
+const DB_STORE_NAME = "dungeons";
 const DB_VERSION = 1;
 let database;

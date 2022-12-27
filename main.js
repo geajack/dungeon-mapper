@@ -15,13 +15,7 @@ class LevelButtonsController
         this.newLevelButton.addEventListener("click", () => this.onClickNewLevel());
     }
 
-    onClickLevel(button)
-    {
-        let level = parseInt(button.textContent);
-        app.setLevel(level);
-    }
-
-    onClickNewLevel()
+    addLevel()
     {
         let nLevels = this.levelButtons.length;
         let last = this.levelButtons[nLevels - 1];
@@ -29,6 +23,34 @@ class LevelButtonsController
         newButton.textContent = nLevels + 1;
         this.root.insertBefore(newButton, this.newLevelButton);
         this.levelButtons.push(newButton);
+        newButton.addEventListener("click", () => this.onClickLevel(newButton));
+        return newButton;
+    }
+
+    setNLevels(nLevels)
+    {
+        while (this.levelButtons.length < nLevels)
+        {
+            this.addLevel();
+        }
+    }
+
+    onClickLevel(button)
+    {
+        let level = parseInt(button.textContent);
+        setLevel(level);
+
+        for (let button of this.levelButtons)
+        {
+            button.classList.remove("selected");
+        }
+        button.classList.add("selected");
+    }
+
+    onClickNewLevel()
+    {
+        let newButton = this.addLevel();
+        this.onClickLevel(newButton);
     }
 
 }
@@ -224,7 +246,28 @@ function onWheel(event)
 
 async function onStateChanged()
 {
-    storage.put("dungeon", await app.serialize());
+    storage.put("dungeon", currentLevel, await app.serialize());
+}
+
+async function setLevel(level)
+{
+    await storage.put("dungeon", currentLevel, await app.serialize());
+
+    currentLevel = level;
+    let data = await storage.get("dungeon", currentLevel);
+    if (data)
+    {
+        await app.deserialize(data);
+    }
+    else
+    {
+        await app.reset();
+    }
+    app.x = 0;
+    app.y = 0;
+
+    storage.put("dungeon", currentLevel, await app.serialize());
+    app.render();
 }
 
 async function initialize()
@@ -239,8 +282,15 @@ async function initialize()
     canvas.addEventListener("wheel", onWheel);
 
     await storage.initialize();
-    let level = await storage.get("dungeon");
-    await app.deserialize(level);
+
+    let nLevels = await storage.countLevels("dungeon");
+    levelButtons.setNLevels(nLevels);
+    
+    let level = await storage.get("dungeon", 1);
+    if (level)
+    {
+        await app.deserialize(level);
+    }
 
     app.onStateChanged = onStateChanged;
     
@@ -251,6 +301,8 @@ let canvas = document.querySelector("canvas");
 let app = new App(canvas);
 let toolbar = bind(document.querySelector("footer"), ToolbarController, [], []);
 let levelButtons = bind(document.querySelector("header"), LevelButtonsController, [], []);
+
+let currentLevel = 1;
 
 addEventListener("resize", () => {
     canvas.width = canvas.clientWidth;
