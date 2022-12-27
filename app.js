@@ -1,3 +1,17 @@
+import * as storage from "./storage.js";
+
+
+async function loadImage(url)
+{
+    let image = new Image();
+    image.src = url;
+    await new Promise((resolve, reject) => {
+        image.onload = resolve;
+    });
+    return image;
+}
+
+
 class Drag
 {
     constructor()
@@ -69,6 +83,29 @@ export class Hatching
         this.mask.getContext("2d").fillStyle = gradient;
         this.mask.getContext("2d").fillRect(0, 0, 2*r, 2*r);
         this.maskPixels = this.mask.getContext("2d").getImageData(0, 0, this.mask.width, this.mask.height).data
+    }
+
+    async serialize()
+    {
+        return {
+            x0: this.x0,
+            y0: this.y0,
+            widthInMeters: this.widthInMeters,
+            heightInMeters: this.heightInMeters,
+            hatching: await this.hatching.convertToBlob()
+        };
+    }
+
+    async deserialize(data)
+    {
+        this.x0 = data.x0;
+        this.y0 = data.y0;
+        this.widthInMeters = data.widthInMeters;
+        this.heightInMeters = data.heightInMeters;
+        this.hatching = new OffscreenCanvas(this.widthInMeters * 50, this.heightInMeters * 50);
+
+        let bitmap = await createImageBitmap(data.hatching);
+        this.hatching.getContext("2d").drawImage(bitmap, 0, 0);
     }
 
     draw(x, y)
@@ -266,6 +303,7 @@ class TileMap
     {
         return this.matrix.length;
     }
+
 }
 
 export class App
@@ -277,7 +315,8 @@ export class App
         this.canvas.width = canvas.clientWidth;
         this.canvas.height = canvas.clientHeight;
 
-        this.worldCoordinates = { x: 0, y: 0 };
+        this.x = 0;
+        this.y = 0;
         this.pixelsPerMeter = 30;
         this.drag = new Drag();
         this.tool = Tools.DRAW;
@@ -285,24 +324,35 @@ export class App
 
     async initialize()
     {
-        let imageURL = "./resources/hatching.png";
-        let image = new Image();
-        image.src = imageURL;
-        await new Promise((resolve, reject) => {
-            image.onload = resolve;
-        });
-        let bitmap = await createImageBitmap(image, { resizeWidth: 300, resizeHeight: 300 });
-        this.tileMap = new TileMap();
-        this.hatching = new Hatching(bitmap);
-        this.symbols = [];
+        await storage.initialize();
 
-        imageURL = "./resources/star.png";
-        let image2 = new Image();
-        image2.src = imageURL;
-        await new Promise((resolve, reject) => {
-            image2.onload = resolve;
-        });
-        this.symbol = image2;
+        this.symbols = [];
+        this.symbol = await loadImage("./resources/star.png");
+        
+        try
+        {
+            this.tileMap = (await storage.get("dungeon")).foreground;
+            this.tileMap.__proto__ = TileMap.prototype;
+            console.log(this.tileMap);
+        }
+        catch
+        {
+            console.log("No tile map found.");
+            this.tileMap = new TileMap();
+        }
+
+        {
+            let image = await loadImage("./resources/hatching.png");
+            let bitmap = await createImageBitmap(image, { resizeWidth: 300, resizeHeight: 300 });
+            this.hatching = new Hatching(bitmap);
+        }
+
+        try
+        {
+            let data = (await storage.get("dungeon")).background;
+            await this.hatching.deserialize(data);
+        }
+        catch {}
     }
 
     setTool(toolName)
@@ -310,12 +360,11 @@ export class App
         this.tool = Tools[toolName];
     }
 
-    render(event)
+    async render(event)
     {
         let {
             context,
             canvas,
-            worldCoordinates,
             pixelsPerMeter,
             drag,
             tool,
@@ -339,6 +388,15 @@ export class App
             else if (event.type === "mouseup")
             {
                 drag.stop();
+
+                await storage.put(
+                    "dungeon",
+                    {
+                        "name": "Dungeon",
+                        "foreground": tileMap,
+                        "background": await this.hatching.serialize()
+                    }
+                );
             }
             else if (event.type === "zoom")
             {
@@ -349,45 +407,45 @@ export class App
 
             if (drag.dragging && tool === Tools.MOVE)
             {
-                worldCoordinates.x -= drag.getDx() / pixelsPerMeter;
-                worldCoordinates.y -= drag.getDy() / pixelsPerMeter;
+                this.x -= drag.getDx() / pixelsPerMeter;
+                this.y -= drag.getDy() / pixelsPerMeter;
             }
 
             if (drag.dragging)
             {
-                let x = worldCoordinates.x + drag.x1 / pixelsPerMeter;
-                let y = worldCoordinates.y + drag.y1 / pixelsPerMeter;
+                let mouseWorldX = this.x + drag.x1 / pixelsPerMeter;
+                let mouseWorldY = this.y + drag.y1 / pixelsPerMeter;
                 
                 if (tool === Tools.DRAW_HALLWAY)
                 {
-                    tileMap.draw(x, y);
-                    this.hatching.draw(x, y);
+                    tileMap.draw(mouseWorldX, mouseWorldY);
+                    this.hatching.draw(mouseWorldX, mouseWorldY);
                 }
                 else if (tool === Tools.DRAW_BACKGROUND)
                 {
-                    this.hatching.draw(x, y);
+                    this.hatching.draw(mouseWorldX, mouseWorldY);
                 }
                 else if (tool === Tools.ERASE_BACKGROUND)
                 {
-                    this.hatching.erase(x, y);
+                    this.hatching.erase(mouseWorldX, mouseWorldY);
                 }
                 else if (tool === Tools.ERASE_HALLWAY)
                 {
-                    tileMap.erase(x, y);
+                    tileMap.erase(mouseWorldX, mouseWorldY);
                 }
                 else if (tool === Tools.DRAW_SYMBOL)
                 {
                     this.symbols.push(
                         {
-                            x: Math.floor(x),
-                            y: Math.floor(y),
+                            x: Math.floor(mouseWorldX),
+                            y: Math.floor(mouseWorldY),
                         }
                     );
                 }
                 else if (tool === Tools.ERASE_SYMBOL)
                 {
                     let index = this.symbols.findIndex(
-                        symbol => symbol.x === Math.floor(x) && symbol.y === Math.floor(y)
+                        symbol => symbol.x === Math.floor(mouseWorldX) && symbol.y === Math.floor(mouseWorldY)
                     );
                     if (index >= 0)
                     {
@@ -397,8 +455,8 @@ export class App
             }
         }
 
-        let dx = Math.ceil(worldCoordinates.x) - worldCoordinates.x;
-        let dy = Math.ceil(worldCoordinates.y) - worldCoordinates.y;
+        let dx = Math.ceil(this.x) - this.x;
+        let dy = Math.ceil(this.y) - this.y;
         
         context.fillStyle = "#111";
         context.fillRect(0, 0, canvas.width, canvas.height);
@@ -427,8 +485,8 @@ export class App
 
         context.drawImage(
             this.hatching.hatching,
-            pixelsPerMeter * (this.hatching.x0 - worldCoordinates.x),
-            pixelsPerMeter * (this.hatching.y0 - worldCoordinates.y),
+            pixelsPerMeter * (this.hatching.x0 - this.x),
+            pixelsPerMeter * (this.hatching.y0 - this.y),
             pixelsPerMeter * this.hatching.widthInMeters,
             pixelsPerMeter * this.hatching.heightInMeters
         );
@@ -446,10 +504,10 @@ export class App
             {
                 if (row[xOffset])
                 {                
-                    let x = xOffset + tileMap.x0;
-                    let y = yOffset + tileMap.y0;
+                    let tileX = xOffset + tileMap.x0;
+                    let tileY = yOffset + tileMap.y0;
                     
-                    let [px, py] = [x - worldCoordinates.x, y - worldCoordinates.y];
+                    let [px, py] = [tileX - this.x, tileY - this.y];
                     px *= pixelsPerMeter;
                     py *= pixelsPerMeter;
 
@@ -487,7 +545,7 @@ export class App
 
         for (let symbol of this.symbols)
         {
-            let [px, py] = [symbol.x - worldCoordinates.x, symbol.y - worldCoordinates.y];
+            let [px, py] = [symbol.x - this.x, symbol.y - this.y];
             px *= pixelsPerMeter;
             py *= pixelsPerMeter;
             context.drawImage(this.symbol, px, py, pixelsPerMeter, pixelsPerMeter);
