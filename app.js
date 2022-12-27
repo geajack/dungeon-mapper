@@ -327,7 +327,14 @@ export class App
         await storage.initialize();
 
         this.symbols = [];
-        this.symbol = await loadImage("./resources/star.png");
+        this.currentSymbol = "stairsdown";
+
+        this.symbolSet = {
+            "stairsdown": await loadImage("./resources/stairsdown.png"),
+            "stairsup": await loadImage("./resources/stairsup.png"),
+            "chest": await loadImage("./resources/chest.png"),
+            "star": await loadImage("./resources/star.png"),
+        };
         
         try
         {
@@ -358,6 +365,11 @@ export class App
     setTool(toolName)
     {
         this.tool = Tools[toolName];
+    }
+
+    setSymbol(symbolName)
+    {
+        this.currentSymbol = symbolName;
     }
 
     async render(event)
@@ -439,18 +451,15 @@ export class App
                         {
                             x: Math.floor(mouseWorldX),
                             y: Math.floor(mouseWorldY),
+                            symbol: this.currentSymbol
                         }
                     );
                 }
                 else if (tool === Tools.ERASE_SYMBOL)
                 {
-                    let index = this.symbols.findIndex(
-                        symbol => symbol.x === Math.floor(mouseWorldX) && symbol.y === Math.floor(mouseWorldY)
-                    );
-                    if (index >= 0)
-                    {
-                        this.symbols.splice(index, 1);
-                    }
+                    let x = Math.floor(mouseWorldX);
+                    let y = Math.floor(mouseWorldY);
+                    this.symbols = this.symbols.filter(item => item.x !== x || item.y !== y);
                 }
             }
         }
@@ -548,7 +557,7 @@ export class App
             let [px, py] = [symbol.x - this.x, symbol.y - this.y];
             px *= pixelsPerMeter;
             py *= pixelsPerMeter;
-            context.drawImage(this.symbol, px, py, pixelsPerMeter, pixelsPerMeter);
+            context.drawImage(this.symbolSet[symbol.symbol], px + 2, py + 2, pixelsPerMeter - 4, pixelsPerMeter - 4);
         }
     }
 }

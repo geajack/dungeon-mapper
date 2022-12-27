@@ -11,9 +11,26 @@
 <body>
     <canvas></canvas>
     <footer>
-        <div id="subtools" class="toolbox" bind="subtoolBox">
+        <div class="toolbox" bind="subtoolBox">
             <button bind="subtools[]" vb-tool="DRAW" class="selected">
                 <img src="resources/pen.svg" />
+            </button>
+            <button bind="subtools[]" vb-tool="ERASE">
+                <img src="resources/eraser.svg" />
+            </button>
+        </div>
+        <div class="toolbox" bind="symbolBox" style="display: none">
+            <button bind="subtools[]" vb-tool="stairsdown" class="selected">
+                <img src="resources/stairsdown.png" />
+            </button>
+            <button bind="subtools[]" vb-tool="stairsup" class="selected">
+                <img src="resources/stairsup.png" />
+            </button>
+            <button bind="subtools[]" vb-tool="chest" class="selected">
+                <img src="resources/chest.png" />
+            </button>
+            <button bind="subtools[]" vb-tool="star" class="selected">
+                <img src="resources/star.svg" />
             </button>
             <button bind="subtools[]" vb-tool="ERASE">
                 <img src="resources/eraser.svg" />

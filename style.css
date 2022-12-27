@@ -23,19 +23,6 @@ footer
     transform: translateX(-50%);
 }
 
-#tools
-{
-    
-}
-
-#subtools
-{
-    width: fit-content;
-    align-items: center;
-    margin: auto;
-    margin-bottom: 10px;
-}
-
 .toolbox
 {
     border: 3px solid black;
@@ -49,6 +36,10 @@ footer
     padding: 10px;
     box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, 0.75);
     background-color: #222;
+    margin: auto;
+    margin-bottom: 10px;
+    width: fit-content;
+    align-items: center;
 }
 
 .toolbox button

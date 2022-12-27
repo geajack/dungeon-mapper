@@ -20,7 +20,7 @@ class ToolbarController
         this.subtoolChoices = {
             "HALLWAY": "DRAW",
             "BACKGROUND": "DRAW",
-            "SYMBOL": "DRAW"
+            "SYMBOL": "stairsdown"
         };
 
         this.setTool();
@@ -29,11 +29,26 @@ class ToolbarController
     setTool()
     {
         let tool = this.tool;
-        if (this.subtoolChoices[tool])
+        if (tool !== "SYMBOL")
         {
-            tool = this.subtoolChoices[tool] + "_" + tool;
+            if (this.subtoolChoices[tool])
+            {
+                tool = this.subtoolChoices[tool] + "_" + tool;
+            }
+            app.setTool(tool);
         }
-        app.setTool(tool);
+        else
+        {
+            if (this.subtoolChoices[tool] !== "ERASE")
+            {
+                app.setTool("DRAW_SYMBOL");
+                app.setSymbol(this.subtoolChoices[tool]);
+            }
+            else
+            {
+                app.setTool("ERASE_SYMBOL");
+            }
+        }
     }
 
     onClickTool(button)
@@ -62,6 +77,17 @@ class ToolbarController
         else
         {
             this.subtoolBox.style.display = "none";
+        }
+
+        if (button.tool == "SYMBOL")
+        {
+            this.symbolBox.style.display = "flex";
+            this.subtoolBox.style.display = "none";
+        }
+        else
+        {
+            this.symbolBox.style.display = "none";
+            this.subtoolBox.style.display = "flex";
         }
 
         this.tool = button.tool;
