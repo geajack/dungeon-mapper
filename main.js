@@ -62,8 +62,6 @@ class ToolbarController
 
         if (button.subtools == "yes")
         {
-            this.subtoolBox.style.display = "flex";
-
             let subtool = this.subtoolChoices[button.tool];
             for (let button of this.subtools)
             {
@@ -73,21 +71,22 @@ class ToolbarController
                     button.classList.add("selected");
                 }
             }            
-        }
-        else
-        {
-            this.subtoolBox.style.display = "none";
-        }
 
-        if (button.tool == "SYMBOL")
-        {
-            this.symbolBox.style.display = "flex";
-            this.subtoolBox.style.display = "none";
+            if (button.tool == "SYMBOL")
+            {
+                this.symbolBox.style.display = "flex";
+                this.subtoolBox.style.display = "none";
+            }
+            else
+            {
+                this.symbolBox.style.display = "none";
+                this.subtoolBox.style.display = "flex";
+            }
         }
         else
         {
+            this.subtoolBox.style.display = "none";
             this.symbolBox.style.display = "none";
-            this.subtoolBox.style.display = "flex";
         }
 
         this.tool = button.tool;

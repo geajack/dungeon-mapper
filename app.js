@@ -557,7 +557,13 @@ export class App
             let [px, py] = [symbol.x - this.x, symbol.y - this.y];
             px *= pixelsPerMeter;
             py *= pixelsPerMeter;
-            context.drawImage(this.symbolSet[symbol.symbol], px + 2, py + 2, pixelsPerMeter - 4, pixelsPerMeter - 4);
+            context.drawImage(
+                this.symbolSet[symbol.symbol],
+                px + 4,
+                py + 4,
+                pixelsPerMeter - 8, 
+                pixelsPerMeter - 8
+            );
         }
     }
 }
