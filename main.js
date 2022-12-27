@@ -1,5 +1,6 @@
 import { bind } from "./viewbind.js";
 import { App } from "./app.js";
+import * as storage from "./storage.js";
 
 
 class LevelButtonsController
@@ -221,6 +222,11 @@ function onWheel(event)
     );
 }
 
+async function onStateChanged()
+{
+    storage.put("dungeon", await app.serialize());
+}
+
 async function initialize()
 {
     await app.initialize();
@@ -231,6 +237,13 @@ async function initialize()
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("touchmove", onTouchMove);
     canvas.addEventListener("wheel", onWheel);
+
+    await storage.initialize();
+    let level = await storage.get("dungeon");
+    await app.deserialize(level);
+
+    app.onStateChanged = onStateChanged;
+    
     app.render();
 }
 

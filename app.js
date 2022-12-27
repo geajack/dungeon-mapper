@@ -1,6 +1,3 @@
-import * as storage from "./storage.js";
-
-
 async function loadImage(url)
 {
     let image = new Image();
@@ -229,6 +226,13 @@ class TileMap
         this.y0 = 0;
     }
 
+    deserialize(data)
+    {
+        this.x0 = data.x0;
+        this.y0 = data.y0;
+        this.matrix = data.matrix;
+    }
+
     draw(x, y)
     {
         x = Math.floor(x);
@@ -324,8 +328,6 @@ export class App
 
     async initialize()
     {
-        await storage.initialize();
-
         this.symbols = [];
         this.currentSymbol = "stairsdown";
 
@@ -336,30 +338,24 @@ export class App
             "star": await loadImage("./resources/star.png"),
         };
         
-        try
-        {
-            this.tileMap = (await storage.get("dungeon")).foreground;
-            this.tileMap.__proto__ = TileMap.prototype;
-            console.log(this.tileMap);
-        }
-        catch
-        {
-            console.log("No tile map found.");
-            this.tileMap = new TileMap();
-        }
+        this.tileMap = new TileMap();
+        let image = await loadImage("./resources/hatching.png");
+        let bitmap = await createImageBitmap(image, { resizeWidth: 300, resizeHeight: 300 });
+        this.hatching = new Hatching(bitmap);
+    }
 
-        {
-            let image = await loadImage("./resources/hatching.png");
-            let bitmap = await createImageBitmap(image, { resizeWidth: 300, resizeHeight: 300 });
-            this.hatching = new Hatching(bitmap);
-        }
+    async deserialize(data)
+    {
+        this.tileMap.deserialize(data.foreground);
+        await this.hatching.deserialize(data.background);
+    }
 
-        try
-        {
-            let data = (await storage.get("dungeon")).background;
-            await this.hatching.deserialize(data);
+    async serialize()
+    {
+        return {
+            "foreground": this.tileMap,
+            "background": await this.hatching.serialize()
         }
-        catch {}
     }
 
     setTool(toolName)
@@ -400,15 +396,10 @@ export class App
             else if (event.type === "mouseup")
             {
                 drag.stop();
-
-                await storage.put(
-                    "dungeon",
-                    {
-                        "name": "Dungeon",
-                        "foreground": tileMap,
-                        "background": await this.hatching.serialize()
-                    }
-                );
+                if (this.onStateChanged)
+                {
+                    this.onStateChanged();
+                }
             }
             else if (event.type === "zoom")
             {
