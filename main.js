@@ -1,6 +1,37 @@
 import { bind } from "./viewbind.js";
 import { App } from "./app.js";
 
+
+class LevelButtonsController
+{
+    initialize(html)
+    {
+        this.root = html;
+        for (let button of this.levelButtons)
+        {
+            button.addEventListener("click", () => this.onClickLevel(button));
+        }
+        this.newLevelButton.addEventListener("click", () => this.onClickNewLevel());
+    }
+
+    onClickLevel(button)
+    {
+        let level = parseInt(button.textContent);
+        app.setLevel(level);
+    }
+
+    onClickNewLevel()
+    {
+        let nLevels = this.levelButtons.length;
+        let last = this.levelButtons[nLevels - 1];
+        let newButton = document.createElement("button");
+        newButton.textContent = nLevels + 1;
+        this.root.insertBefore(newButton, this.newLevelButton);
+        this.levelButtons.push(newButton);
+    }
+
+}
+
 class ToolbarController
 {
     initialize()
@@ -206,6 +237,7 @@ async function initialize()
 let canvas = document.querySelector("canvas");
 let app = new App(canvas);
 let toolbar = bind(document.querySelector("footer"), ToolbarController, [], []);
+let levelButtons = bind(document.querySelector("header"), LevelButtonsController, [], []);
 
 addEventListener("resize", () => {
     canvas.width = canvas.clientWidth;
